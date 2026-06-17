@@ -1,0 +1,21 @@
+{
+  "name": "lishu",
+  "version": "0.0.1",
+  "description": "用大模型自动整理 Chrome 书签栏 —— 非破坏式分类到新文件夹",
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@10.13.1",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.6.1",
+    "@types/chrome": "^0.1.43",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9"
+  }
+}
