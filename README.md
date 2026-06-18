@@ -121,6 +121,7 @@ Lishu stores configuration in `chrome.storage.local`.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full data flow.
 See [PRIVACY.md](PRIVACY.md) for the public privacy policy.
+See [docs/CATEGORY_QUALITY.md](docs/CATEGORY_QUALITY.md) for reviewing generated categories after a run.
 See [docs/LAUNCH.md](docs/LAUNCH.md) for launch and feedback-posting drafts.
 See [docs/SAMPLE_DATA.md](docs/SAMPLE_DATA.md) for synthetic bookmark data for public screenshots and manual QA.
 
