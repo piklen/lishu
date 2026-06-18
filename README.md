@@ -74,6 +74,12 @@ Release zip verification:
 shasum -a 256 lishu-0.0.3.zip
 ```
 
+- To verify on Windows PowerShell or Command Prompt, run:
+
+```powershell
+certutil -hashfile lishu-0.0.3.zip SHA256
+```
+
 - Compare the output with the release asset digest, without the `sha256:` prefix.
 - If you prefer not to use a prebuilt zip, build from source and load `dist/`.
 
