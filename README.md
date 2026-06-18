@@ -169,9 +169,10 @@ docs/                  PRD, architecture, roadmap
 
 ## Roadmap
 
-- [Add an LM Studio provider example](https://github.com/piklen/lishu/issues/18)
-- [Restore automatic CI after GitHub Actions billing is fixed](https://github.com/piklen/lishu/issues/8)
 - [Chrome Web Store listing prep](docs/STORE_LISTING.md)
+- [Add safe sample bookmark fixtures for docs and screenshots](https://github.com/piklen/lishu/issues/25)
+- [Add editable category names before writing copies](https://github.com/piklen/lishu/issues/26)
+- [Add local-model JSON troubleshooting notes](https://github.com/piklen/lishu/issues/27)
 
 ## Contributing
 

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Provider setup examples
+    url: https://github.com/piklen/lishu/blob/main/docs/PROVIDERS.md
+    about: Check known OpenAI-compatible, Anthropic, and local-provider setup examples.
+  - name: Security policy
+    url: https://github.com/piklen/lishu/security/policy
+    about: Report security issues privately instead of opening a public issue.
+  - name: Privacy policy
+    url: https://github.com/piklen/lishu/blob/main/PRIVACY.md
+    about: Review what bookmark and provider data Lishu uses.
