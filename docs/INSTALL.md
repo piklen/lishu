@@ -4,6 +4,8 @@ Lishu is installed through Chrome developer mode until Chrome Web Store publishi
 
 ![Visual guide for loading Lishu through chrome://extensions](assets/install-load-unpacked.svg)
 
+Microsoft Edge follows the same local extension flow through `edge://extensions`.
+
 ## Load From A Release Zip
 
 1. Download `lishu-0.0.3.zip` from the official [GitHub Releases](https://github.com/piklen/lishu/releases) page.
@@ -21,6 +23,13 @@ Lishu is installed through Chrome developer mode until Chrome Web Store publishi
 4. Enable **Developer mode**.
 5. Click **Load unpacked**.
 6. Select the generated `dist/` folder, not the repository root.
+
+## Microsoft Edge
+
+1. Open `edge://extensions`.
+2. Enable **Developer mode**.
+3. Click **Load unpacked**.
+4. Select the same unzipped release folder or generated `dist/` folder.
 
 ## Public Screenshot Safety
 

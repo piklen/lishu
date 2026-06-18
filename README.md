@@ -64,6 +64,8 @@ Fast path:
 
 See [docs/INSTALL.md](docs/INSTALL.md) for a visual load-unpacked guide.
 
+Microsoft Edge users can open `edge://extensions` instead of `chrome://extensions`; enable **Developer mode**, then use **Load unpacked** with the same release or `dist/` folder.
+
 Release zip verification:
 
 - Download release zips only from the official [GitHub Releases](https://github.com/piklen/lishu/releases) page.
