@@ -6,6 +6,8 @@ AI-powered Chrome bookmark organizer. Lishu scans your bookmarks, asks your own 
 
 > 中文：理书是一个 Chrome MV3 扩展，用你自己配置的大模型整理书签。它只创建整理结果副本，不动原书签。
 
+[Website](https://piklen.github.io/lishu/) · [Latest release](https://github.com/piklen/lishu/releases/latest) · [Privacy policy](PRIVACY.md)
+
 ![Lishu demo: configure an LLM, classify bookmarks, and write a separate output folder](docs/assets/demo.gif)
 
 ## What It Does
