@@ -89,12 +89,15 @@ Current repository assets:
 | `docs/assets/popup.png` | Store screenshot candidate showing configuration, non-destructive actions, and bookmark health checks. |
 | `docs/assets/social-card.png` | Social preview image for launch posts and Open Graph sharing. |
 | `docs/assets/demo.gif` | GitHub README demo. Convert selected frames to static PNG/JPEG if the Store requires static screenshots. |
+| `docs/fixtures/sample-bookmarks.html` | Synthetic bookmark import fixture for public screenshots and manual QA. |
 
 Additional screenshots to capture before submission:
 
 - Category preview with several generated categories and counts.
 - Completion state after writing generated folder.
 - Dead-link report with synthetic/sample bookmarks, no private URLs.
+
+Use [SAMPLE_DATA.md](SAMPLE_DATA.md) when capturing those screenshots.
 
 ## Pre-Submit Checklist
 
@@ -105,5 +108,6 @@ Additional screenshots to capture before submission:
 - [ ] `bash scripts/check-secrets.sh`
 - [ ] Load the packaged extension in Chrome and verify the popup manually.
 - [ ] Verify no real API key, private bookmark URL, or personal account appears in screenshots.
+- [ ] Use synthetic sample bookmarks for public screenshots unless a screenshot has been reviewed and redacted.
 - [ ] Confirm README, `PRIVACY.md`, and Store privacy answers describe the same data flow.
 - [ ] Confirm Chrome Web Store review timing before planning a public announcement.
