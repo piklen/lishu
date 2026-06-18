@@ -8,6 +8,18 @@ AI-powered Chrome bookmark organizer. Lishu scans your bookmarks, asks your own 
 
 ![Lishu demo: configure an LLM, classify bookmarks, and write a separate output folder](docs/assets/demo.gif)
 
+## What It Does
+
+Lishu is for people who have years of saved Chrome bookmarks but do not want a bookmark manager that takes over their data.
+
+1. Reads your bookmark titles and URLs from Chrome.
+2. Proposes a small set of practical categories with your configured LLM.
+3. Classifies bookmarks into those categories.
+4. Shows a category-count preview.
+5. Creates a separate output folder only after you confirm.
+
+The original bookmark tree stays where it is, so you can compare the generated result, delete it, or run Lishu again with different settings.
+
 ## Why Lishu
 
 - **Non-destructive by design**: output is copied into a new `📚 理书整理 YYYY-MM-DD` folder.
@@ -16,6 +28,16 @@ AI-powered Chrome bookmark organizer. Lishu scans your bookmarks, asks your own 
 - **Preview before writing**: review the category distribution before Lishu creates the output folder.
 - **Minimal default permissions**: by default it only asks for your LLM endpoint origin. Broad page access is requested only when you enable homepage meta scraping.
 - **Recoverable runs**: progress is saved in `chrome.storage.local`; the last generated output folder can be removed from the popup.
+
+## Safety Model
+
+| Concern | Lishu's behavior |
+|---|---|
+| Existing bookmarks | Never updates, moves, or deletes original bookmarks. |
+| Output | Creates a new generated folder with bookmark copies. |
+| API keys | Stored in `chrome.storage.local`, not Chrome sync. |
+| Backend | No Lishu server. Requests go from your browser to your configured provider. |
+| Host permissions | Default mode requests only your LLM endpoint origin. |
 
 ## Install Locally
 
@@ -47,6 +69,7 @@ Load the extension:
 3. Click **Load unpacked**.
 4. Select the generated `dist/` directory.
 5. Open Lishu from the toolbar, configure your LLM endpoint, API key, and model, then click **开始整理 / Start organizing**.
+6. Review the category preview, then click **确认写入副本 / Confirm write copy**.
 
 ## LLM Configuration
 
@@ -95,6 +118,10 @@ Yes. The popup can delete the last generated `📚 理书整理 ...` output fold
 **Does Lishu send my bookmarks to a server?**
 
 Lishu has no server. Bookmark titles and URLs are sent directly from your browser to the LLM endpoint you configure.
+
+**Can I review the result before anything is written?**
+
+Yes. Lishu first shows a category-count preview. It creates the generated output folder only after you confirm.
 
 **Why does meta scraping request broad page access?**
 
