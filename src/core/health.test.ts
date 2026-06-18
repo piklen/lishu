@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { FlatBookmark } from '../types';
-import { buildBookmarkHealthReport, findDuplicateGroups, normalizeBookmarkUrl } from './health';
+import {
+  buildBookmarkHealthReport,
+  buildDeadLinkReport,
+  classifyDeadLinkStatus,
+  findDuplicateGroups,
+  normalizeBookmarkUrl,
+} from './health';
 
 describe('bookmark health report', () => {
   it('归一化 URL 时忽略 hash、末尾斜杠和常见追踪参数', () => {
@@ -41,5 +47,58 @@ describe('bookmark health report', () => {
     expect(report.duplicateGroups).toHaveLength(1);
     expect(report.duplicateBookmarkCount).toBe(2);
     expect(Date.parse(report.generatedAt)).not.toBeNaN();
+  });
+
+  it('区分明确失效、无法确认和无需报告的 HTTP 状态', () => {
+    expect(classifyDeadLinkStatus(200)).toBeNull();
+    expect(classifyDeadLinkStatus(301)).toBeNull();
+    expect(classifyDeadLinkStatus(401)).toBeNull();
+    expect(classifyDeadLinkStatus(403)).toBeNull();
+    expect(classifyDeadLinkStatus(404)).toBe('broken');
+    expect(classifyDeadLinkStatus(410)).toBe('broken');
+    expect(classifyDeadLinkStatus(429)).toBe('unverified');
+    expect(classifyDeadLinkStatus(503)).toBe('unverified');
+  });
+
+  it('联网失效检测只检查 http(s) 书签并报告可疑结果', async () => {
+    const bookmarks: FlatBookmark[] = [
+      { id: '1', title: 'OK', url: 'https://example.com/ok' },
+      { id: '2', title: 'Gone', url: 'https://example.com/gone' },
+      { id: '3', title: 'Private', url: 'https://example.com/private' },
+      { id: '4', title: 'Local', url: 'chrome://extensions' },
+    ];
+    const fetchImpl = async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/gone')) return new Response(null, { status: 404 });
+      if (url.endsWith('/private')) return new Response(null, { status: 403 });
+      return new Response(null, { status: 200 });
+    };
+
+    const report = await buildDeadLinkReport(bookmarks, { fetchImpl, concurrency: 2, timeoutMs: 1_000 });
+
+    expect(report.total).toBe(4);
+    expect(report.checked).toBe(3);
+    expect(report.deadLinks).toHaveLength(1);
+    expect(report.deadLinks[0]).toMatchObject({
+      status: 'broken',
+      httpStatus: 404,
+      bookmark: { id: '2' },
+    });
+    expect(Date.parse(report.generatedAt)).not.toBeNaN();
+  });
+
+  it('HEAD 不被支持时用 GET 兜底', async () => {
+    const bookmarks: FlatBookmark[] = [{ id: '1', title: 'Fallback', url: 'https://example.com/fallback' }];
+    const methods: string[] = [];
+    const fetchImpl = async (_input: RequestInfo | URL, init?: RequestInit) => {
+      methods.push(init?.method ?? 'GET');
+      if (init?.method === 'HEAD') return new Response(null, { status: 405 });
+      return new Response(null, { status: 200 });
+    };
+
+    const report = await buildDeadLinkReport(bookmarks, { fetchImpl, concurrency: 1, timeoutMs: 1_000 });
+
+    expect(methods).toEqual(['HEAD', 'GET']);
+    expect(report.deadLinks).toHaveLength(0);
   });
 });

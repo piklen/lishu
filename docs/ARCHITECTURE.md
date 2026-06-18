@@ -36,7 +36,7 @@
 | `popup/popup.ts` | UI:配置 LLM、选探查档位、触发、显示预览/进度/摘要(vanilla TS) |
 | `core/bookmarks.ts` | 读 getTree + 扁平化;非破坏式 create 文件夹与副本 |
 | `core/classify.ts` | Pass A 定类目 / Pass B 归类;组装 prompt + 解析 JSON |
-| `core/health.ts` | 本地书签体检;归一化 URL 并生成重复书签报告 |
+| `core/health.ts` | 书签体检;归一化 URL 生成重复书签报告;opt-in 并发/超时受控地检测可能失效链接 |
 | `core/pipeline.ts` | 批处理(30~50/批)+ 进度持久化 + 分类预览停点 + 可中断续跑 |
 | `core/storage.ts` | chrome.storage.local 读写配置与进度 |
 | `providers/types.ts` | `LlmProvider` / `EnrichProvider` 接口 |
@@ -56,12 +56,12 @@
 
 **写入前预览(信任闸门)**:分类完成后 progress 进入 `preview`,popup 只展示每个分类的数量,不创建任何书签。用户点“确认写入副本”后才进入 `writing` 并调用 `chrome.bookmarks.create`。这把高成本的 LLM 分类和高敏感的书签写入拆成两步,降低误操作风险。
 
-**本地重复报告(只读体检)**:`core/health.ts` 只读取扁平化书签,按归一化 URL 聚合重复项,不发网络请求,也不删除 / 移动 / 更新任何书签。popup 只展示重复组摘要,清理动作由用户自行决定。
+**书签体检(只读报告)**:`core/health.ts` 只读取扁平化书签,重复 URL 检测完全本地完成;失效链接检测必须由用户在 popup 单独触发,先申请 `<all_urls>` 权限,再以 6 并发 / 8 秒超时检查 http(s) 链接。两类体检都只展示报告,不删除 / 移动 / 更新任何书签。
 
 ## 权限与隐私
 
 - `permissions: ["bookmarks","storage"]`
-- `optional_host_permissions: ["<all_urls>"]` —— 默认运行只动态申请用户配置的大模型 endpoint origin;用户选择 meta-scrape 时才申请更宽的网页访问权限。
+- `optional_host_permissions: ["<all_urls>"]` —— 默认运行只动态申请用户配置的大模型 endpoint origin;用户选择 meta-scrape 或失效链接检测时才申请更宽的网页访问权限。
 - API key 存 `chrome.storage.local`(不用 `storage.sync`,避免 key 同步上云)。
 - 默认 world-knowledge 只发 `URL+标题`;meta-scrape 默认关。
 

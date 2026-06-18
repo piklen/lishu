@@ -17,7 +17,7 @@ Lishu is for people who have years of saved Chrome bookmarks but do not want a b
 3. Classifies bookmarks into those categories.
 4. Shows a category-count preview.
 5. Creates a separate output folder only after you confirm.
-6. Runs a local duplicate-bookmark report when you want a quick cleanup pass.
+6. Runs local duplicate reports and opt-in dead-link checks when you want a cleanup pass.
 
 The original bookmark tree stays where it is, so you can compare the generated result, delete it, or run Lishu again with different settings.
 
@@ -27,7 +27,7 @@ The original bookmark tree stays where it is, so you can compare the generated r
 - **Bring your own LLM**: OpenAI-compatible Chat Completions and Anthropic Messages API are supported.
 - **Local-first**: no account, no backend, no bundled model key.
 - **Preview before writing**: review the category distribution before Lishu creates the output folder.
-- **Local duplicate report**: detect repeated bookmark URLs without network access or automatic deletion.
+- **Bookmark health checks**: detect repeated URLs locally, and check possible dead links only when you explicitly request network access.
 - **Minimal default permissions**: by default it only asks for your LLM endpoint origin. Broad page access is requested only when you enable homepage meta scraping.
 - **Recoverable runs**: progress is saved in `chrome.storage.local`; the last generated output folder can be removed from the popup.
 
@@ -41,6 +41,7 @@ The original bookmark tree stays where it is, so you can compare the generated r
 | Backend | No Lishu server. Requests go from your browser to your configured provider. |
 | Host permissions | Default mode requests only your LLM endpoint origin. |
 | Duplicate checks | Local read-only URL analysis, no webpage requests. |
+| Dead-link checks | Opt-in network requests to bookmarked http(s) URLs, report only. |
 
 ## Install Locally
 
@@ -104,6 +105,7 @@ Lishu stores configuration in `chrome.storage.local`.
 - There is no Lishu server.
 - In the default mode, Lishu sends bookmark titles and URLs only to the LLM endpoint you configure.
 - If you enable **homepage meta scraping**, Lishu requests broader page access and fetches only homepage metadata such as `<title>` and meta description.
+- If you run **dead-link checking**, Lishu first requests broad page access, then contacts bookmarked http(s) URLs directly from your browser.
 - Original bookmarks are not deleted, updated, or moved.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full data flow.
@@ -129,6 +131,10 @@ Yes. Lishu first shows a category-count preview. It creates the generated output
 **Can Lishu delete duplicate bookmarks for me?**
 
 No. The duplicate report is read-only. It points out repeated URLs so you can decide what to clean up manually.
+
+**Does dead-link checking visit my bookmarked sites?**
+
+Only when you click **检查失效链接 / Check dead links** and grant page access. Lishu sends direct browser requests to bookmarked http(s) URLs, limits concurrency and timeouts, and shows possible broken or unverified links without changing bookmarks.
 
 **Why does meta scraping request broad page access?**
 
@@ -158,7 +164,7 @@ docs/                  PRD, architecture, roadmap
 
 ## Roadmap
 
-- [Duplicate and dead-link detection mode](https://github.com/piklen/lishu/issues/7)
+- [Add an LM Studio provider example](https://github.com/piklen/lishu/issues/18)
 - [Restore automatic CI after GitHub Actions billing is fixed](https://github.com/piklen/lishu/issues/8)
 - Chrome Web Store packaging
 
