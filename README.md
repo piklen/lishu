@@ -24,6 +24,16 @@ Requirements:
 - pnpm 10+
 - Chrome or another Chromium-based browser with extension developer mode
 
+Fast path:
+
+1. Download `lishu-0.0.1.zip` from [Releases](https://github.com/piklen/lishu/releases).
+2. Unzip it locally.
+3. Open `chrome://extensions`.
+4. Enable **Developer mode**.
+5. Click **Load unpacked** and select the unzipped folder.
+
+Build from source:
+
 ```bash
 pnpm install
 pnpm build
@@ -95,6 +105,7 @@ pnpm dev
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm package:extension
 bash scripts/check-secrets.sh
 ```
 

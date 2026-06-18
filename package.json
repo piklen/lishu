@@ -27,6 +27,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "package:extension": "bash scripts/package-extension.sh",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
