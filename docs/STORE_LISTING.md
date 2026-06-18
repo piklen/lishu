@@ -36,7 +36,7 @@ Detailed description:
 ```text
 Lishu is a local-first Chrome bookmark organizer.
 
-It scans your bookmarks, asks the LLM endpoint you configure to classify them, shows a category-count preview, and writes the result into a new generated folder only after you confirm.
+It scans your bookmarks, asks the LLM endpoint you configure to classify them, shows a category-count preview where you can adjust category names, and writes the result into a new generated folder only after you confirm.
 
 Your original bookmark tree is not moved, edited, or deleted.
 
@@ -44,7 +44,7 @@ Key features:
 - Bring your own LLM endpoint: OpenAI-compatible Chat Completions and Anthropic Messages API.
 - Local-first design: no Lishu account, no Lishu backend, no bundled API key.
 - Non-destructive output: generated bookmark copies go into a separate folder.
-- Preview before writing: classification finishes before any bookmark folder is created.
+- Preview before writing: classification finishes before any bookmark folder is created, and category names can be adjusted before confirmation.
 - Bookmark health checks: duplicate URL reports are local-only; dead-link checks are opt-in and read-only.
 - Minimal default permissions: broad page access is requested only for homepage meta scraping or dead-link checks.
 
@@ -93,7 +93,7 @@ Current repository assets:
 
 Additional screenshots to capture before submission:
 
-- Category preview with several generated categories and counts.
+- Category preview with several generated categories, counts, and editable category names.
 - Completion state after writing generated folder.
 - Dead-link report with synthetic/sample bookmarks, no private URLs.
 

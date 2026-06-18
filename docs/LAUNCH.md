@@ -23,7 +23,7 @@ Short pitch:
 ```text
 I built Lishu for people whose Chrome bookmarks have grown into a pile they no longer trust.
 
-It scans bookmarks, asks the LLM endpoint you configure to classify them, shows a category-count preview, and writes the result into a new generated folder only after confirmation.
+It scans bookmarks, asks the LLM endpoint you configure to classify them, shows a category-count preview where category names can be adjusted, and writes the result into a new generated folder only after confirmation.
 
 The original bookmark tree is never moved, edited, or deleted.
 ```
@@ -33,7 +33,7 @@ Trust points:
 - Local-first: no Lishu account, backend, telemetry, or bundled API key.
 - Bring your own LLM: OpenAI-compatible and Anthropic endpoints.
 - Non-destructive: generated copies go into a separate folder.
-- Preview gate: classification finishes before any output folder is created.
+- Preview gate: classification finishes before any output folder is created, and category names can be adjusted before confirmation.
 - Health checks: duplicate URL reports are local-only; dead-link checks are opt-in and read-only.
 - Open-source: MIT license, CI, privacy policy, provider examples, and a good first issue.
 
@@ -56,7 +56,7 @@ The main constraint is that it should not take over your bookmark tree:
 
 - It reads bookmark titles and URLs.
 - It asks the LLM endpoint you configure to propose and apply categories.
-- It shows a category-count preview before writing.
+- It shows a category-count preview before writing, with editable category names.
 - It writes a new generated folder with bookmark copies only after confirmation.
 - It never moves, edits, or deletes original bookmarks.
 
@@ -96,7 +96,7 @@ It does not run a backend or ship an API key. You configure your own OpenAI-comp
 The safety model is the main point:
 
 - original bookmarks are never moved, edited, or deleted
-- category counts are shown before any write happens
+- category counts and editable category names are shown before any write happens
 - duplicate reports are local-only
 - dead-link checks are opt-in and report-only
 - API keys stay in chrome.storage.local
@@ -112,7 +112,7 @@ I am looking for feedback on provider compatibility and the safest way to make b
 ```text
 I built Lishu, a local-first Chrome extension that organizes bookmarks with your own LLM endpoint.
 
-It previews categories first, then writes a new generated folder only after confirmation. Original bookmarks are never moved, edited, or deleted.
+It previews categories first, lets you adjust category names, then writes a new generated folder only after confirmation. Original bookmarks are never moved, edited, or deleted.
 
 https://piklen.github.io/lishu/
 https://github.com/piklen/lishu
@@ -123,7 +123,7 @@ https://github.com/piklen/lishu
 ```text
 我做了一个开源 Chrome 扩展：理书 Lishu。
 
-它用你自己配置的大模型 endpoint 整理浏览器书签：先扫描标题和 URL，让模型生成分类并归类，展示分类数量预览，确认后才把结果写到一个新的整理文件夹里。
+它用你自己配置的大模型 endpoint 整理浏览器书签：先扫描标题和 URL，让模型生成分类并归类，展示分类数量预览，允许你调整分类名，确认后才把结果写到一个新的整理文件夹里。
 
 核心原则是不接管你的书签：
 - 原书签不移动、不编辑、不删除
@@ -146,7 +146,7 @@ Organize Chrome bookmarks with your own LLM.
 Description:
 
 ```text
-Lishu is a local-first Chrome bookmark organizer. It uses your own OpenAI-compatible or Anthropic endpoint to classify bookmarks, previews category counts, and writes a separate generated folder only after confirmation. Original bookmarks are never moved, edited, or deleted.
+Lishu is a local-first Chrome bookmark organizer. It uses your own OpenAI-compatible or Anthropic endpoint to classify bookmarks, previews category counts with editable category names, and writes a separate generated folder only after confirmation. Original bookmarks are never moved, edited, or deleted.
 ```
 
 ## Launch Checklist
@@ -166,6 +166,6 @@ If launch feedback arrives, prefer small public issues:
 
 - Provider compatibility notes.
 - Import/export or report output formats.
-- Category editing before write.
+- Category quality review.
 - Safer cleanup workflow for duplicates.
 - Better local-model JSON reliability.

@@ -18,7 +18,7 @@ Lishu is for people who have years of saved Chrome bookmarks but do not want a b
 1. Reads your bookmark titles and URLs from Chrome.
 2. Proposes a small set of practical categories with your configured LLM.
 3. Classifies bookmarks into those categories.
-4. Shows a category-count preview.
+4. Shows a category-count preview where you can adjust category names.
 5. Creates a separate output folder only after you confirm.
 6. Runs local duplicate reports and opt-in dead-link checks when you want a cleanup pass.
 
@@ -29,7 +29,7 @@ The original bookmark tree stays where it is, so you can compare the generated r
 - **Non-destructive by design**: output is copied into a new `📚 理书整理 YYYY-MM-DD` folder.
 - **Bring your own LLM**: OpenAI-compatible Chat Completions and Anthropic Messages API are supported.
 - **Local-first**: no account, no backend, no bundled model key.
-- **Preview before writing**: review the category distribution before Lishu creates the output folder.
+- **Preview before writing**: review category counts and adjust category names before Lishu creates the output folder.
 - **Bookmark health checks**: detect repeated URLs locally, and check possible dead links only when you explicitly request network access.
 - **Minimal default permissions**: by default it only asks for your LLM endpoint origin. Broad page access is requested only when you enable homepage meta scraping.
 - **Recoverable runs**: progress is saved in `chrome.storage.local`; the last generated output folder can be removed from the popup.
@@ -76,7 +76,7 @@ Load the extension:
 3. Click **Load unpacked**.
 4. Select the generated `dist/` directory.
 5. Open Lishu from the toolbar, configure your LLM endpoint, API key, and model, then click **开始整理 / Start organizing**.
-6. Review the category preview, then click **确认写入副本 / Confirm write copy**.
+6. Review the category preview, adjust category names if needed, then click **确认写入副本 / Confirm write copy**.
 
 ## LLM Configuration
 
@@ -132,7 +132,7 @@ Lishu has no server. Bookmark titles and URLs are sent directly from your browse
 
 **Can I review the result before anything is written?**
 
-Yes. Lishu first shows a category-count preview. It creates the generated output folder only after you confirm.
+Yes. Lishu first shows a category-count preview where category names can be edited. It creates the generated output folder only after you confirm.
 
 **Can Lishu delete duplicate bookmarks for me?**
 
@@ -171,7 +171,6 @@ docs/                  PRD, architecture, roadmap
 ## Roadmap
 
 - [Chrome Web Store listing prep](docs/STORE_LISTING.md)
-- [Add editable category names before writing copies](https://github.com/piklen/lishu/issues/26)
 - [Add local-model JSON troubleshooting notes](https://github.com/piklen/lishu/issues/27)
 
 ## Contributing

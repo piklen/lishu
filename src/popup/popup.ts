@@ -2,6 +2,7 @@
 import type {
   AppConfig,
   BookmarkHealthReport,
+  CategoryRename,
   DeadLinkReport,
   DeadLinkResult,
   DuplicateGroup,
@@ -62,6 +63,12 @@ interface ActionResponse {
   error?: string;
 }
 
+interface PreviewRow {
+  name: string;
+  count: number;
+  editable: boolean;
+}
+
 function readForm(): AppConfig {
   return normalizeConfig({
     llm: {
@@ -112,7 +119,7 @@ function percentOf(progress: Progress | null): number {
   return 0;
 }
 
-function previewRows(progress: Progress): { name: string; count: number }[] {
+function previewRows(progress: Progress): PreviewRow[] {
   const categoryNames = new Set(progress.categories.map((category) => category.name));
   const counts = new Map(progress.categories.map((category) => [category.name, 0]));
   let otherCount = 0;
@@ -125,23 +132,46 @@ function previewRows(progress: Progress): { name: string; count: number }[] {
     }
   }
 
-  otherCount += Math.max(0, progress.total - progress.classifications.length);
-  if (otherCount > 0) counts.set(OTHER_CATEGORY, (counts.get(OTHER_CATEGORY) ?? 0) + otherCount);
+  const unclassifiedCount = Math.max(0, progress.total - progress.classifications.length);
+  otherCount += unclassifiedCount;
+  if (otherCount > 0 && categoryNames.has(OTHER_CATEGORY)) {
+    counts.set(OTHER_CATEGORY, (counts.get(OTHER_CATEGORY) ?? 0) + otherCount);
+  }
 
-  return Array.from(counts, ([name, count]) => ({ name, count }))
-    .filter((row) => row.count > 0)
+  const rows = progress.categories.map((category) => ({
+    name: category.name,
+    count: counts.get(category.name) ?? 0,
+    editable: true,
+  }));
+  if (otherCount > 0 && !categoryNames.has(OTHER_CATEGORY)) {
+    rows.push({ name: OTHER_CATEGORY, count: otherCount, editable: false });
+  }
+
+  return rows
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'));
 }
 
-function appendPreviewRow(parent: HTMLElement, name: string, count: string): void {
+function appendPreviewRow(parent: HTMLElement, preview: PreviewRow): void {
   const row = document.createElement('div');
-  row.className = 'preview-row';
-  const nameEl = document.createElement('span');
-  nameEl.className = 'preview-name';
-  nameEl.textContent = name;
+  row.className = preview.editable ? 'preview-row editable' : 'preview-row';
+  let nameEl: HTMLElement;
+  if (preview.editable) {
+    const input = document.createElement('input');
+    input.className = 'preview-name-input';
+    input.type = 'text';
+    input.value = preview.name;
+    input.dataset.originalCategory = preview.name;
+    input.setAttribute('aria-label', `分类名: ${preview.name}`);
+    nameEl = input;
+  } else {
+    const span = document.createElement('span');
+    span.className = 'preview-name';
+    span.textContent = preview.name;
+    nameEl = span;
+  }
   const countEl = document.createElement('span');
   countEl.className = 'preview-count';
-  countEl.textContent = count;
+  countEl.textContent = String(preview.count);
   row.append(nameEl, countEl);
   parent.append(row);
 }
@@ -156,14 +186,31 @@ function renderPreview(progress: Progress | null): void {
   const header = document.createElement('div');
   header.className = 'preview-header';
   const nameHeader = document.createElement('span');
-  nameHeader.textContent = '分类预览';
+  nameHeader.textContent = '分类名';
   const countHeader = document.createElement('span');
   countHeader.textContent = '书签数';
   header.append(nameHeader, countHeader);
   previewEl.append(header);
 
-  for (const row of previewRows(progress)) appendPreviewRow(previewEl, row.name, String(row.count));
+  for (const row of previewRows(progress)) appendPreviewRow(previewEl, row);
   previewEl.hidden = false;
+}
+
+function collectCategoryRenames(): CategoryRename[] {
+  const inputs = Array.from(previewEl.querySelectorAll<HTMLInputElement>('.preview-name-input'));
+  const seen = new Set<string>();
+  const renames: CategoryRename[] = [];
+
+  for (const input of inputs) {
+    const from = input.dataset.originalCategory ?? '';
+    const to = input.value.trim();
+    if (!to) throw new Error('分类名不能为空');
+    if (seen.has(to)) throw new Error(`分类名不能重复: ${to}`);
+    seen.add(to);
+    if (from && to !== from) renames.push({ from, to });
+  }
+
+  return renames;
 }
 
 function appendDuplicateGroup(parent: HTMLElement, group: DuplicateGroup): void {
@@ -300,7 +347,7 @@ function renderProgress(progress: Progress | null): void {
 
   if (progress.status === 'preview') {
     const categoryCount = progress.categories.length;
-    statusEl.textContent = `预览就绪: ${progress.total} 个书签 / ${categoryCount} 个分类,确认后才会写入副本`;
+    statusEl.textContent = `预览就绪: ${progress.total} 个书签 / ${categoryCount} 个分类,可调整分类名后写入副本`;
     return;
   }
 
@@ -368,9 +415,9 @@ function sendStart(): Promise<void> {
   });
 }
 
-function sendConfirmWrite(): Promise<void> {
+function sendConfirmWrite(categoryRenames: CategoryRename[]): Promise<void> {
   return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'CONFIRM_WRITE' } satisfies Message, () => {
+    chrome.runtime.sendMessage({ type: 'CONFIRM_WRITE', categoryRenames } satisfies Message, () => {
       const lastError = chrome.runtime.lastError;
       if (lastError) reject(new Error(lastError.message));
       else resolve();
@@ -478,10 +525,13 @@ startButton.addEventListener('click', () => {
 });
 
 confirmWriteButton.addEventListener('click', () => {
-  confirmWriteButton.disabled = true;
-  statusEl.classList.remove('error');
-  statusEl.textContent = '正在写入整理副本';
-  void sendConfirmWrite().catch((error: unknown) => {
+  void (async () => {
+    const categoryRenames = collectCategoryRenames();
+    confirmWriteButton.disabled = true;
+    statusEl.classList.remove('error');
+    statusEl.textContent = '正在写入整理副本';
+    await sendConfirmWrite(categoryRenames);
+  })().catch((error: unknown) => {
     statusEl.classList.add('error');
     statusEl.textContent = error instanceof Error ? error.message : String(error);
     confirmWriteButton.disabled = false;

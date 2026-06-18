@@ -1,5 +1,5 @@
 // 编排整条整理流程:扫描 → 定类目 → 探查 → 分批归类 → 非破坏写入
-import type { AppConfig, FlatBookmark, Progress } from '../types';
+import type { AppConfig, CategoryRename, FlatBookmark, Progress } from '../types';
 import { getAllBookmarks, writeOrganized } from './bookmarks';
 import { defineCategories, classifyAll } from './classify';
 import { createEnrichProvider } from '../providers/enrich';
@@ -36,6 +36,55 @@ function createEmitter(progress: Progress, onProgress: ProgressFn): (patch: Part
   };
 }
 
+function normalizedRenameMap(progress: Progress, renames: CategoryRename[]): Map<string, string> {
+  const categoryNames = new Set(progress.categories.map((category) => category.name));
+  const renameMap = new Map<string, string>();
+
+  for (const rename of renames) {
+    if (!categoryNames.has(rename.from)) continue;
+
+    const to = rename.to.trim();
+    if (!to) throw new Error('分类名不能为空');
+    if (to === rename.from) continue;
+
+    const previousTo = renameMap.get(rename.from);
+    if (previousTo && previousTo !== to) {
+      throw new Error(`分类改名冲突: ${rename.from}`);
+    }
+    renameMap.set(rename.from, to);
+  }
+
+  const seen = new Set<string>();
+  for (const category of progress.categories) {
+    const finalName = renameMap.get(category.name) ?? category.name;
+    if (seen.has(finalName)) {
+      throw new Error(`分类名不能重复: ${finalName}`);
+    }
+    seen.add(finalName);
+  }
+
+  return renameMap;
+}
+
+export function applyCategoryRenames(progress: Progress, renames: CategoryRename[] = []): Progress {
+  if (renames.length === 0) return progress;
+
+  const renameMap = normalizedRenameMap(progress, renames);
+  if (renameMap.size === 0) return progress;
+
+  return {
+    ...progress,
+    categories: progress.categories.map((category) => ({
+      ...category,
+      name: renameMap.get(category.name) ?? category.name,
+    })),
+    classifications: progress.classifications.map((classification) => ({
+      ...classification,
+      category: renameMap.get(classification.category) ?? classification.category,
+    })),
+  };
+}
+
 async function writeClassifiedProgress(progress: Progress, onProgress: ProgressFn): Promise<Progress> {
   const emit = createEmitter(progress, onProgress);
   const bookmarks = await getAllBookmarks();
@@ -59,6 +108,7 @@ async function writeClassifiedProgress(progress: Progress, onProgress: ProgressF
 export async function writePreviewedOrganize(
   savedProgress: Progress,
   onProgress: ProgressFn,
+  categoryRenames: CategoryRename[] = [],
 ): Promise<Progress> {
   if (savedProgress.status !== 'preview') {
     throw new Error('没有可写入的分类预览');
@@ -67,11 +117,11 @@ export async function writePreviewedOrganize(
     throw new Error('分类预览不完整,请重新整理');
   }
   return writeClassifiedProgress(
-    {
+    applyCategoryRenames({
       ...savedProgress,
       error: undefined,
       rootFolderId: undefined,
-    },
+    }, categoryRenames),
     onProgress,
   );
 }

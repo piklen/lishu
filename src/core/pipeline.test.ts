@@ -137,4 +137,41 @@ describe('runOrganize', () => {
       expect.objectContaining({ title: expect.stringContaining('理书整理') }),
     );
   });
+
+  it('确认写入时使用编辑后的分类名写入生成副本', async () => {
+    const preview = await runOrganize(config, () => {}, null, { previewBeforeWrite: true });
+    const bookmarks = chrome.bookmarks as typeof chrome.bookmarks & {
+      create: ReturnType<typeof vi.fn>;
+    };
+
+    const done = await writePreviewedOrganize(preview, () => {}, [
+      { from: '开发工具', to: 'Engineering' },
+      { from: 'AI 工具', to: 'AI References' },
+    ]);
+    const createdTitles = bookmarks.create.mock.calls.map(
+      ([details]) => (details as chrome.bookmarks.CreateDetails).title,
+    );
+
+    expect(done.categories.map((category) => category.name)).toEqual(['Engineering', 'AI References']);
+    expect(done.classifications.map((classification) => classification.category)).toEqual([
+      'Engineering',
+      'AI References',
+    ]);
+    expect(createdTitles).toContain('Engineering');
+    expect(createdTitles).toContain('AI References');
+    expect(createdTitles).not.toContain('开发工具');
+    expect(createdTitles).not.toContain('AI 工具');
+  });
+
+  it('确认写入时拒绝重复的分类名', async () => {
+    const preview = await runOrganize(config, () => {}, null, { previewBeforeWrite: true });
+    const bookmarks = chrome.bookmarks as typeof chrome.bookmarks & {
+      create: ReturnType<typeof vi.fn>;
+    };
+
+    await expect(
+      writePreviewedOrganize(preview, () => {}, [{ from: '开发工具', to: 'AI 工具' }]),
+    ).rejects.toThrow('分类名不能重复: AI 工具');
+    expect(bookmarks.create).not.toHaveBeenCalled();
+  });
 });
