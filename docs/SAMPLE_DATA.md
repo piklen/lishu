@@ -39,3 +39,14 @@ Use this checklist for public README, Store listing, launch, or issue screenshot
 - Keep the generated output folder unwritten unless the screenshot is specifically for completion-state QA.
 - Confirm the screenshot does not show a real API key, private URL, personal account, real bookmark title, or private folder name.
 - Keep the change documentation-only unless the PR explicitly updates screenshot assets.
+
+## Completion-State Screenshot Checklist
+
+Use this checklist when showing Lishu after the generated output folder has been written.
+
+- Use `docs/fixtures/sample-bookmarks.html`, not a real Chrome bookmark export.
+- Capture the `done` state after clicking **确认写入副本 / Confirm write copy**.
+- Show the completed run summary or generated output confirmation state.
+- If a generated folder is visible, confirm it contains only synthetic bookmark titles and synthetic `.test` URLs from the sample fixture.
+- Confirm the screenshot does not show a real API key, private URL, personal account, real bookmark title, or private folder name.
+- Keep the change documentation-only unless the PR explicitly updates screenshot assets.
