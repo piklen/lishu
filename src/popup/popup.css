@@ -173,6 +173,59 @@ button {
   font-weight: 600;
 }
 
+.health-report {
+  margin-top: 10px;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  background: #f6f8fa;
+}
+
+.health-summary {
+  padding: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #1f2328;
+  border-bottom: 1px solid #d8dee4;
+}
+
+.duplicate-group {
+  padding: 8px;
+  background: #fff;
+  border-top: 1px solid #eaeef2;
+}
+
+.duplicate-group:first-of-type {
+  border-top: none;
+}
+
+.duplicate-url {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0969da;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.duplicate-item {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #1f2328;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.duplicate-path {
+  color: #8b949e;
+}
+
 .note {
   margin: 10px 0 0;
   font-size: 11px;

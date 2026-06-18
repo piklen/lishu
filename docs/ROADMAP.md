@@ -12,6 +12,7 @@
 - [x] 批处理 + 进度持久化(MV3 service worker 续跑兜底)
 - [x] 非破坏式建夹 + 写副本
 - [x] 分类预览 → 用户确认后再写入
+- [x] 本地重复书签报告(只读,不自动删除)
 - [x] popup:配置 / 触发 / 进度 / 摘要 / 清进度 / 删除上次结果
 - [x] 交付产物:`dist/` 可用于 Chrome load unpacked
 - [x] 真实本机验收:加载扩展 + 填 DeepSeek 配置 + 整理 738 个书签
@@ -20,7 +21,7 @@
 ## v2+(有需要再做)
 
 - 接 search-api provider(Bing API / 带 web search 的模型)
-- 增量整理(只处理新增书签)、去重、失效链接检测
+- 增量整理(只处理新增书签)、失效链接检测、可选去重工作流
 - 上架 Chrome Web Store(unlisted/private)+ CI 自动构建
 - 多语言 / 自定义类目模板
 

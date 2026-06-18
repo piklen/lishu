@@ -1,5 +1,14 @@
 // popup 逻辑:配置、触发、进度展示
-import type { AppConfig, EnrichMode, LlmProtocol, Message, Progress, RunStatus } from '../types';
+import type {
+  AppConfig,
+  BookmarkHealthReport,
+  DuplicateGroup,
+  EnrichMode,
+  LlmProtocol,
+  Message,
+  Progress,
+  RunStatus,
+} from '../types';
 import { loadConfig, loadProgress, normalizeConfig, saveConfig } from '../core/storage';
 
 const STATUS_TEXT: Record<RunStatus, string> = {
@@ -14,6 +23,8 @@ const STATUS_TEXT: Record<RunStatus, string> = {
 };
 
 const OTHER_CATEGORY = '其他';
+const MAX_DUPLICATE_GROUPS = 6;
+const MAX_BOOKMARKS_PER_GROUP = 4;
 
 function mustGet<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
@@ -30,15 +41,19 @@ const batchSizeInput = mustGet<HTMLInputElement>('batchSize');
 const saveButton = mustGet<HTMLButtonElement>('save');
 const startButton = mustGet<HTMLButtonElement>('start');
 const confirmWriteButton = mustGet<HTMLButtonElement>('confirmWrite');
+const analyzeBookmarksButton = mustGet<HTMLButtonElement>('analyzeBookmarks');
 const resetButton = mustGet<HTMLButtonElement>('reset');
 const deleteOutputButton = mustGet<HTMLButtonElement>('deleteOutput');
 const statusEl = mustGet<HTMLDivElement>('status');
 const barFill = mustGet<HTMLDivElement>('barFill');
 const previewEl = mustGet<HTMLDivElement>('preview');
+const healthStatusEl = mustGet<HTMLDivElement>('healthStatus');
+const healthReportEl = mustGet<HTMLDivElement>('healthReport');
 
 interface ActionResponse {
   ok: boolean;
   progress?: Progress;
+  report?: BookmarkHealthReport;
   error?: string;
 }
 
@@ -144,6 +159,64 @@ function renderPreview(progress: Progress | null): void {
 
   for (const row of previewRows(progress)) appendPreviewRow(previewEl, row.name, String(row.count));
   previewEl.hidden = false;
+}
+
+function appendDuplicateGroup(parent: HTMLElement, group: DuplicateGroup): void {
+  const groupEl = document.createElement('div');
+  groupEl.className = 'duplicate-group';
+
+  const urlEl = document.createElement('span');
+  urlEl.className = 'duplicate-url';
+  urlEl.title = group.displayUrl;
+  urlEl.textContent = `${group.bookmarks.length} 个副本 · ${group.displayUrl}`;
+  groupEl.append(urlEl);
+
+  for (const bookmark of group.bookmarks.slice(0, MAX_BOOKMARKS_PER_GROUP)) {
+    const itemEl = document.createElement('span');
+    itemEl.className = 'duplicate-item';
+    itemEl.title = bookmark.url;
+    const path = bookmark.parentPath ? ` · ${bookmark.parentPath}` : '';
+    itemEl.textContent = `${bookmark.title}${path}`;
+    groupEl.append(itemEl);
+  }
+
+  const hiddenCount = group.bookmarks.length - MAX_BOOKMARKS_PER_GROUP;
+  if (hiddenCount > 0) {
+    const hiddenEl = document.createElement('span');
+    hiddenEl.className = 'duplicate-item duplicate-path';
+    hiddenEl.textContent = `...还有 ${hiddenCount} 个`;
+    groupEl.append(hiddenEl);
+  }
+
+  parent.append(groupEl);
+}
+
+function renderHealthReport(report: BookmarkHealthReport): void {
+  healthReportEl.replaceChildren();
+  healthReportEl.hidden = false;
+
+  const summary = document.createElement('div');
+  summary.className = 'health-summary';
+  if (report.duplicateGroups.length === 0) {
+    summary.textContent = `已扫描 ${report.total} 个书签,未发现重复 URL。`;
+    healthReportEl.append(summary);
+    return;
+  }
+
+  summary.textContent = `已扫描 ${report.total} 个书签,发现 ${report.duplicateGroups.length} 组重复 URL,涉及 ${report.duplicateBookmarkCount} 个书签。`;
+  healthReportEl.append(summary);
+
+  for (const group of report.duplicateGroups.slice(0, MAX_DUPLICATE_GROUPS)) {
+    appendDuplicateGroup(healthReportEl, group);
+  }
+
+  const hiddenGroupCount = report.duplicateGroups.length - MAX_DUPLICATE_GROUPS;
+  if (hiddenGroupCount > 0) {
+    const hiddenEl = document.createElement('div');
+    hiddenEl.className = 'health-summary';
+    hiddenEl.textContent = `还有 ${hiddenGroupCount} 组未在 popup 中展开。`;
+    healthReportEl.append(hiddenEl);
+  }
 }
 
 function renderProgress(progress: Progress | null): void {
@@ -263,6 +336,23 @@ function sendAction(type: 'RESET_PROGRESS' | 'DELETE_LAST_OUTPUT'): Promise<Prog
   });
 }
 
+function sendAnalyzeBookmarks(): Promise<BookmarkHealthReport> {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ type: 'ANALYZE_BOOKMARKS' } satisfies Message, (response: ActionResponse | undefined) => {
+      const lastError = chrome.runtime.lastError;
+      if (lastError) {
+        reject(new Error(lastError.message));
+        return;
+      }
+      if (!response?.ok || !response.report) {
+        reject(new Error(response?.error ?? '书签体检失败'));
+        return;
+      }
+      resolve(response.report);
+    });
+  });
+}
+
 async function saveCurrentConfig(): Promise<AppConfig> {
   const config = readForm();
   await saveConfig(config);
@@ -315,6 +405,30 @@ confirmWriteButton.addEventListener('click', () => {
     statusEl.textContent = error instanceof Error ? error.message : String(error);
     confirmWriteButton.disabled = false;
   });
+});
+
+analyzeBookmarksButton.addEventListener('click', () => {
+  analyzeBookmarksButton.disabled = true;
+  healthReportEl.hidden = true;
+  healthReportEl.replaceChildren();
+  healthStatusEl.classList.remove('error', 'done');
+  healthStatusEl.textContent = '正在检查重复书签';
+  void sendAnalyzeBookmarks()
+    .then((report) => {
+      healthStatusEl.classList.add('done');
+      healthStatusEl.textContent =
+        report.duplicateGroups.length === 0
+          ? '未发现重复 URL'
+          : `发现 ${report.duplicateGroups.length} 组重复 URL`;
+      renderHealthReport(report);
+    })
+    .catch((error: unknown) => {
+      healthStatusEl.classList.add('error');
+      healthStatusEl.textContent = error instanceof Error ? error.message : String(error);
+    })
+    .finally(() => {
+      analyzeBookmarksButton.disabled = false;
+    });
 });
 
 resetButton.addEventListener('click', () => {
