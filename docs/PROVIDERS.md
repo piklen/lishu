@@ -2,6 +2,19 @@
 
 Lishu does not ship an API key or proxy requests through a Lishu server. Configure your own provider in the popup.
 
+## Which Provider Should I Try First?
+
+Choose based on the trade-off you care about most:
+
+| Path | Best when | Watch for |
+|---|---|---|
+| Hosted OpenAI-compatible endpoint | You want the easiest setup and reliable JSON output. | Bookmark titles and URLs are sent to the provider you configure. |
+| Anthropic Messages API | You already use Anthropic models or prefer that API. | Use the Anthropic protocol option and `/v1/messages` endpoint shape. |
+| Local Ollama-compatible or LM Studio server | You want the most private path and are comfortable running a local model. | Model size and instruction-following quality matter; smaller or less instruction-tuned models may return invalid JSON. |
+| Private gateway or LiteLLM | Your team already routes model calls through an internal gateway. | The gateway must expose an OpenAI-compatible `/chat/completions` endpoint. |
+
+Lishu has no backend, no telemetry, and no bundled API key. Requests go directly from your browser to the endpoint you configure.
+
 ## OpenAI
 
 ```text
