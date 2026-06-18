@@ -168,4 +168,4 @@ If launch feedback arrives, prefer small public issues:
 - Import/export or report output formats.
 - Category quality review.
 - Safer cleanup workflow for duplicates.
-- Better local-model JSON reliability.
+- More provider-specific local runtime notes.

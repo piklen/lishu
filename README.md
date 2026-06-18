@@ -98,7 +98,7 @@ Model: claude-...
 
 OpenAI-compatible endpoints also work with providers such as DeepSeek, OpenRouter, LiteLLM, Ollama-compatible gateways, and private API gateways as long as they expose `/chat/completions`.
 
-See [docs/PROVIDERS.md](docs/PROVIDERS.md) for copy-paste provider examples, including Ollama-compatible local gateways.
+See [docs/PROVIDERS.md](docs/PROVIDERS.md) for copy-paste provider examples, including Ollama-compatible local gateways and local-model JSON troubleshooting.
 
 ## Privacy And Permissions
 
@@ -171,7 +171,6 @@ docs/                  PRD, architecture, roadmap
 ## Roadmap
 
 - [Chrome Web Store listing prep](docs/STORE_LISTING.md)
-- [Add local-model JSON troubleshooting notes](https://github.com/piklen/lishu/issues/27)
 
 ## Contributing
 
