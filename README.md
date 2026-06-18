@@ -121,15 +121,16 @@ docs/                  PRD, architecture, roadmap
 
 ## Roadmap
 
-- Preview categories before writing output.
-- Optional search provider for better unknown-site classification.
-- Incremental organization for newly added bookmarks.
-- Duplicate and dead-link detection.
-- Chrome Web Store packaging.
+- [Preview categories before writing output](https://github.com/piklen/lishu/issues/4)
+- [Provider preset examples](https://github.com/piklen/lishu/issues/5)
+- [Short README demo GIF](https://github.com/piklen/lishu/issues/6)
+- [Duplicate and dead-link detection mode](https://github.com/piklen/lishu/issues/7)
+- [Restore automatic CI after GitHub Actions billing is fixed](https://github.com/piklen/lishu/issues/8)
+- Chrome Web Store packaging
 
 ## Contributing
 
-Bug reports, focused pull requests, and provider integrations are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+Bug reports, focused pull requests, and provider integrations are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md). New contributors can start with [good first issues](https://github.com/piklen/lishu/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22).
 
 ## License
 
