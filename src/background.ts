@@ -2,7 +2,8 @@
 import type { Message, Progress } from './types';
 import { clearProgress, loadConfig, saveProgress, loadProgress } from './core/storage';
 import { runOrganize, writePreviewedOrganize } from './core/pipeline';
-import { removeGeneratedFolder } from './core/bookmarks';
+import { getAllBookmarks, removeGeneratedFolder } from './core/bookmarks';
+import { buildBookmarkHealthReport } from './core/health';
 
 let running = false;
 let lastProgress: Progress | null = null;
@@ -102,6 +103,10 @@ async function handleDeleteLastOutput(): Promise<Progress> {
   return handleResetProgress();
 }
 
+async function handleAnalyzeBookmarks() {
+  return buildBookmarkHealthReport(await getAllBookmarks());
+}
+
 chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) => {
   if (message.type === 'START') {
     void handleStart();
@@ -128,6 +133,14 @@ chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) =
   if (message.type === 'DELETE_LAST_OUTPUT') {
     void handleDeleteLastOutput()
       .then((progress) => sendResponse({ ok: true, progress }))
+      .catch((error: unknown) =>
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) }),
+      );
+    return true;
+  }
+  if (message.type === 'ANALYZE_BOOKMARKS') {
+    void handleAnalyzeBookmarks()
+      .then((report) => sendResponse({ ok: true, report }))
       .catch((error: unknown) =>
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) }),
       );

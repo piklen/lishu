@@ -49,6 +49,21 @@ export interface Classification {
   confidence: number;
 }
 
+/** 重复书签组(只读报告,不修改原书签) */
+export interface DuplicateGroup {
+  normalizedUrl: string;
+  displayUrl: string;
+  bookmarks: FlatBookmark[];
+}
+
+/** 本地书签体检报告 */
+export interface BookmarkHealthReport {
+  total: number;
+  duplicateGroups: DuplicateGroup[];
+  duplicateBookmarkCount: number;
+  generatedAt: string;
+}
+
 /** 整理状态机 */
 export type RunStatus =
   | 'idle'
@@ -76,6 +91,7 @@ export interface Progress {
 export type Message =
   | { type: 'START' }
   | { type: 'CONFIRM_WRITE' }
+  | { type: 'ANALYZE_BOOKMARKS' }
   | { type: 'GET_PROGRESS' }
   | { type: 'RESET_PROGRESS' }
   | { type: 'DELETE_LAST_OUTPUT' }

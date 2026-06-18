@@ -36,6 +36,7 @@
 | `popup/popup.ts` | UI:配置 LLM、选探查档位、触发、显示预览/进度/摘要(vanilla TS) |
 | `core/bookmarks.ts` | 读 getTree + 扁平化;非破坏式 create 文件夹与副本 |
 | `core/classify.ts` | Pass A 定类目 / Pass B 归类;组装 prompt + 解析 JSON |
+| `core/health.ts` | 本地书签体检;归一化 URL 并生成重复书签报告 |
 | `core/pipeline.ts` | 批处理(30~50/批)+ 进度持久化 + 分类预览停点 + 可中断续跑 |
 | `core/storage.ts` | chrome.storage.local 读写配置与进度 |
 | `providers/types.ts` | `LlmProvider` / `EnrichProvider` 接口 |
@@ -54,6 +55,8 @@
 **非破坏式(铁律)**:整理流程只 `chrome.bookmarks.create`,绝不 `remove`/`update` 原书签。popup 的“删除上次结果”只允许删除标题前缀为「📚 理书整理」的生成文件夹,用于清理本工具创建的输出。
 
 **写入前预览(信任闸门)**:分类完成后 progress 进入 `preview`,popup 只展示每个分类的数量,不创建任何书签。用户点“确认写入副本”后才进入 `writing` 并调用 `chrome.bookmarks.create`。这把高成本的 LLM 分类和高敏感的书签写入拆成两步,降低误操作风险。
+
+**本地重复报告(只读体检)**:`core/health.ts` 只读取扁平化书签,按归一化 URL 聚合重复项,不发网络请求,也不删除 / 移动 / 更新任何书签。popup 只展示重复组摘要,清理动作由用户自行决定。
 
 ## 权限与隐私
 

@@ -17,6 +17,7 @@ Lishu is for people who have years of saved Chrome bookmarks but do not want a b
 3. Classifies bookmarks into those categories.
 4. Shows a category-count preview.
 5. Creates a separate output folder only after you confirm.
+6. Runs a local duplicate-bookmark report when you want a quick cleanup pass.
 
 The original bookmark tree stays where it is, so you can compare the generated result, delete it, or run Lishu again with different settings.
 
@@ -26,6 +27,7 @@ The original bookmark tree stays where it is, so you can compare the generated r
 - **Bring your own LLM**: OpenAI-compatible Chat Completions and Anthropic Messages API are supported.
 - **Local-first**: no account, no backend, no bundled model key.
 - **Preview before writing**: review the category distribution before Lishu creates the output folder.
+- **Local duplicate report**: detect repeated bookmark URLs without network access or automatic deletion.
 - **Minimal default permissions**: by default it only asks for your LLM endpoint origin. Broad page access is requested only when you enable homepage meta scraping.
 - **Recoverable runs**: progress is saved in `chrome.storage.local`; the last generated output folder can be removed from the popup.
 
@@ -38,6 +40,7 @@ The original bookmark tree stays where it is, so you can compare the generated r
 | API keys | Stored in `chrome.storage.local`, not Chrome sync. |
 | Backend | No Lishu server. Requests go from your browser to your configured provider. |
 | Host permissions | Default mode requests only your LLM endpoint origin. |
+| Duplicate checks | Local read-only URL analysis, no webpage requests. |
 
 ## Install Locally
 
@@ -122,6 +125,10 @@ Lishu has no server. Bookmark titles and URLs are sent directly from your browse
 **Can I review the result before anything is written?**
 
 Yes. Lishu first shows a category-count preview. It creates the generated output folder only after you confirm.
+
+**Can Lishu delete duplicate bookmarks for me?**
+
+No. The duplicate report is read-only. It points out repeated URLs so you can decide what to clean up manually.
 
 **Why does meta scraping request broad page access?**
 

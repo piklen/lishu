@@ -50,6 +50,14 @@
         <div id="preview" class="preview" hidden></div>
         <p class="note">原书签不动。默认只授权 LLM endpoint;抓首页时才申请网页访问。</p>
       </section>
+
+      <section class="card">
+        <h2>书签体检</h2>
+        <button id="analyzeBookmarks" class="btn-secondary">检查重复书签</button>
+        <div id="healthStatus" class="status">未检查</div>
+        <div id="healthReport" class="health-report" hidden></div>
+        <p class="note">只读本地分析,不访问网页,不修改原书签。</p>
+      </section>
     </main>
     <script type="module" src="./popup.ts"></script>
   </body>
