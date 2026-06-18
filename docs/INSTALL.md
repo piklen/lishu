@@ -8,7 +8,7 @@ Microsoft Edge follows the same local extension flow through `edge://extensions`
 
 ## Load From A Release Zip
 
-1. Download `lishu-0.0.3.zip` from the official [GitHub Releases](https://github.com/piklen/lishu/releases) page.
+1. Download [`lishu-0.0.3.zip`](https://github.com/piklen/lishu/releases/download/v0.0.3/lishu-0.0.3.zip) directly, or open the official [GitHub Releases](https://github.com/piklen/lishu/releases) page to confirm the source.
 2. Unzip the file locally.
 3. Open `chrome://extensions`.
 4. Enable **Developer mode**.

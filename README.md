@@ -56,7 +56,7 @@ Requirements:
 
 Fast path:
 
-1. Download `lishu-0.0.3.zip` from [Releases](https://github.com/piklen/lishu/releases).
+1. Download [`lishu-0.0.3.zip`](https://github.com/piklen/lishu/releases/download/v0.0.3/lishu-0.0.3.zip) directly, or open the [GitHub Releases](https://github.com/piklen/lishu/releases) page to confirm the official source.
 2. Unzip it locally.
 3. Open `chrome://extensions`.
 4. Enable **Developer mode**.
