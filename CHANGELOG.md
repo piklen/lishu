@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+No changes yet.
+
+## 0.0.2 - 2026-06-18
+
+- Add a README demo GIF that shows configuration, classification, and generated output.
+- Add provider examples for OpenAI-compatible, Anthropic, DeepSeek, OpenRouter, LiteLLM, Ollama-compatible, and private gateway setups.
+- Add public roadmap issue links and keep one `good first issue` open for contributors.
+- Add a category preview step so Lishu classifies first, then writes the output folder only after user confirmation.
+
+## 0.0.1 - 2026-06-18
+
 - Prepare repository for open-source use with MIT license, CI, contributing guide, and security policy.
 - Switch broad host access to optional host permissions.
 - Add popup recovery actions for clearing progress and deleting the last generated output folder.
