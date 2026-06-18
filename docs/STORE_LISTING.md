@@ -97,7 +97,7 @@ Additional screenshots to capture before submission:
 - Completion state after writing generated folder.
 - Dead-link report with synthetic/sample bookmarks, no private URLs.
 
-Use [SAMPLE_DATA.md](SAMPLE_DATA.md), especially its editable preview screenshot checklist, when capturing those screenshots.
+Use [SAMPLE_DATA.md](SAMPLE_DATA.md), especially its editable preview and completion-state screenshot checklists, when capturing those screenshots.
 
 ## Pre-Submit Checklist
 
