@@ -24,8 +24,9 @@ Lishu is a local Chrome extension:
 - API keys are stored in `chrome.storage.local`.
 - Bookmark titles and URLs are sent to the user-configured LLM endpoint.
 - Homepage metadata is fetched only when the user selects meta scraping.
+- Dead-link checks run only after user action and page-access approval; requests go directly from the browser to bookmarked http(s) URLs.
 - Original bookmarks must not be moved, edited, or deleted by design.
 
 ## Permission Policy
 
-Default runs request only the configured LLM endpoint origin. The extension requests broader page access only for homepage meta scraping.
+Default runs request only the configured LLM endpoint origin. The extension requests broader page access only for homepage meta scraping or opt-in dead-link checks.

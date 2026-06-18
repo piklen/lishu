@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-No changes yet.
+- Add opt-in dead-link checks to the bookmark health report. The check requests page access first, uses bounded concurrency and timeouts, and never modifies original bookmarks.
 
 ## 0.0.2 - 2026-06-18
 

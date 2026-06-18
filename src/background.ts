@@ -3,7 +3,7 @@ import type { Message, Progress } from './types';
 import { clearProgress, loadConfig, saveProgress, loadProgress } from './core/storage';
 import { runOrganize, writePreviewedOrganize } from './core/pipeline';
 import { getAllBookmarks, removeGeneratedFolder } from './core/bookmarks';
-import { buildBookmarkHealthReport } from './core/health';
+import { buildBookmarkHealthReport, buildDeadLinkReport } from './core/health';
 
 let running = false;
 let lastProgress: Progress | null = null;
@@ -107,6 +107,10 @@ async function handleAnalyzeBookmarks() {
   return buildBookmarkHealthReport(await getAllBookmarks());
 }
 
+async function handleCheckDeadLinks() {
+  return buildDeadLinkReport(await getAllBookmarks());
+}
+
 chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) => {
   if (message.type === 'START') {
     void handleStart();
@@ -141,6 +145,14 @@ chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) =
   if (message.type === 'ANALYZE_BOOKMARKS') {
     void handleAnalyzeBookmarks()
       .then((report) => sendResponse({ ok: true, report }))
+      .catch((error: unknown) =>
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) }),
+      );
+    return true;
+  }
+  if (message.type === 'CHECK_DEAD_LINKS') {
+    void handleCheckDeadLinks()
+      .then((deadLinkReport) => sendResponse({ ok: true, deadLinkReport }))
       .catch((error: unknown) =>
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) }),
       );

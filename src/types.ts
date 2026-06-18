@@ -64,6 +64,26 @@ export interface BookmarkHealthReport {
   generatedAt: string;
 }
 
+/** 失效链接检测结果状态 */
+export type DeadLinkStatus = 'broken' | 'unverified';
+
+/** 单个可能失效的书签链接 */
+export interface DeadLinkResult {
+  bookmark: FlatBookmark;
+  status: DeadLinkStatus;
+  reason: string;
+  httpStatus?: number;
+  finalUrl?: string;
+}
+
+/** opt-in 联网失效链接检测报告 */
+export interface DeadLinkReport {
+  total: number;
+  checked: number;
+  deadLinks: DeadLinkResult[];
+  generatedAt: string;
+}
+
 /** 整理状态机 */
 export type RunStatus =
   | 'idle'
@@ -92,6 +112,7 @@ export type Message =
   | { type: 'START' }
   | { type: 'CONFIRM_WRITE' }
   | { type: 'ANALYZE_BOOKMARKS' }
+  | { type: 'CHECK_DEAD_LINKS' }
   | { type: 'GET_PROGRESS' }
   | { type: 'RESET_PROGRESS' }
   | { type: 'DELETE_LAST_OUTPUT' }

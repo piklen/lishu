@@ -2,6 +2,8 @@
 import type {
   AppConfig,
   BookmarkHealthReport,
+  DeadLinkReport,
+  DeadLinkResult,
   DuplicateGroup,
   EnrichMode,
   LlmProtocol,
@@ -25,6 +27,7 @@ const STATUS_TEXT: Record<RunStatus, string> = {
 const OTHER_CATEGORY = '其他';
 const MAX_DUPLICATE_GROUPS = 6;
 const MAX_BOOKMARKS_PER_GROUP = 4;
+const MAX_DEAD_LINKS = 8;
 
 function mustGet<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
@@ -42,6 +45,7 @@ const saveButton = mustGet<HTMLButtonElement>('save');
 const startButton = mustGet<HTMLButtonElement>('start');
 const confirmWriteButton = mustGet<HTMLButtonElement>('confirmWrite');
 const analyzeBookmarksButton = mustGet<HTMLButtonElement>('analyzeBookmarks');
+const checkDeadLinksButton = mustGet<HTMLButtonElement>('checkDeadLinks');
 const resetButton = mustGet<HTMLButtonElement>('reset');
 const deleteOutputButton = mustGet<HTMLButtonElement>('deleteOutput');
 const statusEl = mustGet<HTMLDivElement>('status');
@@ -54,6 +58,7 @@ interface ActionResponse {
   ok: boolean;
   progress?: Progress;
   report?: BookmarkHealthReport;
+  deadLinkReport?: DeadLinkReport;
   error?: string;
 }
 
@@ -219,6 +224,56 @@ function renderHealthReport(report: BookmarkHealthReport): void {
   }
 }
 
+function appendDeadLink(parent: HTMLElement, result: DeadLinkResult): void {
+  const itemEl = document.createElement('div');
+  itemEl.className = 'dead-link';
+
+  const titleEl = document.createElement('span');
+  titleEl.className = 'dead-link-title';
+  titleEl.title = result.bookmark.url;
+  titleEl.textContent = result.bookmark.title || result.bookmark.url;
+
+  const statusEl = document.createElement('span');
+  statusEl.className = `dead-link-status ${result.status}`;
+  statusEl.textContent = result.status === 'broken' ? '可能失效' : '无法确认';
+
+  const metaEl = document.createElement('span');
+  metaEl.className = 'dead-link-meta';
+  const path = result.bookmark.parentPath ? ` · ${result.bookmark.parentPath}` : '';
+  metaEl.textContent = `${result.reason}${path}`;
+
+  itemEl.append(titleEl, statusEl, metaEl);
+  parent.append(itemEl);
+}
+
+function renderDeadLinkReport(report: DeadLinkReport): void {
+  healthReportEl.replaceChildren();
+  healthReportEl.hidden = false;
+
+  const summary = document.createElement('div');
+  summary.className = 'health-summary';
+  if (report.deadLinks.length === 0) {
+    summary.textContent = `已联网检查 ${report.checked}/${report.total} 个 http(s) 书签,未发现可能失效链接。`;
+    healthReportEl.append(summary);
+    return;
+  }
+
+  const brokenCount = report.deadLinks.filter((result) => result.status === 'broken').length;
+  const unverifiedCount = report.deadLinks.length - brokenCount;
+  summary.textContent = `已联网检查 ${report.checked}/${report.total} 个 http(s) 书签,发现 ${brokenCount} 个可能失效、${unverifiedCount} 个无法确认。`;
+  healthReportEl.append(summary);
+
+  for (const result of report.deadLinks.slice(0, MAX_DEAD_LINKS)) appendDeadLink(healthReportEl, result);
+
+  const hiddenCount = report.deadLinks.length - MAX_DEAD_LINKS;
+  if (hiddenCount > 0) {
+    const hiddenEl = document.createElement('div');
+    hiddenEl.className = 'health-summary';
+    hiddenEl.textContent = `还有 ${hiddenCount} 条未在 popup 中展开。`;
+    healthReportEl.append(hiddenEl);
+  }
+}
+
 function renderProgress(progress: Progress | null): void {
   statusEl.classList.remove('error', 'done');
   const hasSavedProgress = !!progress && progress.status !== 'idle';
@@ -273,7 +328,7 @@ function endpointOriginPattern(endpoint: string): string {
   return `${url.origin}/*`;
 }
 
-function requestOrigins(origins: string[]): Promise<void> {
+function requestOrigins(origins: string[], denialMessage = '需要授权访问大模型 endpoint 后才能开始整理'): Promise<void> {
   const uniqueOrigins = Array.from(new Set(origins));
   if (uniqueOrigins.length === 0) return Promise.resolve();
   return new Promise((resolve, reject) => {
@@ -284,7 +339,7 @@ function requestOrigins(origins: string[]): Promise<void> {
         return;
       }
       if (!granted) {
-        reject(new Error('需要授权访问大模型 endpoint 后才能开始整理'));
+        reject(new Error(denialMessage));
         return;
       }
       resolve();
@@ -294,9 +349,13 @@ function requestOrigins(origins: string[]): Promise<void> {
 
 function ensureHostPermissions(config: AppConfig): Promise<void> {
   if (config.enrichMode === 'meta-scrape') {
-    return requestOrigins(['<all_urls>']);
+    return requestOrigins(['<all_urls>'], '需要授权访问网页后才能抓取首页信息');
   }
   return requestOrigins([endpointOriginPattern(config.llm.endpoint)]);
+}
+
+function ensureDeadLinkPermissions(): Promise<void> {
+  return requestOrigins(['<all_urls>'], '需要授权访问网页后才能检查失效链接');
 }
 
 function sendStart(): Promise<void> {
@@ -351,6 +410,28 @@ function sendAnalyzeBookmarks(): Promise<BookmarkHealthReport> {
       resolve(response.report);
     });
   });
+}
+
+function sendCheckDeadLinks(): Promise<DeadLinkReport> {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ type: 'CHECK_DEAD_LINKS' } satisfies Message, (response: ActionResponse | undefined) => {
+      const lastError = chrome.runtime.lastError;
+      if (lastError) {
+        reject(new Error(lastError.message));
+        return;
+      }
+      if (!response?.ok || !response.deadLinkReport) {
+        reject(new Error(response?.error ?? '失效链接检测失败'));
+        return;
+      }
+      resolve(response.deadLinkReport);
+    });
+  });
+}
+
+function setHealthButtonsDisabled(disabled: boolean): void {
+  analyzeBookmarksButton.disabled = disabled;
+  checkDeadLinksButton.disabled = disabled;
 }
 
 async function saveCurrentConfig(): Promise<AppConfig> {
@@ -408,7 +489,7 @@ confirmWriteButton.addEventListener('click', () => {
 });
 
 analyzeBookmarksButton.addEventListener('click', () => {
-  analyzeBookmarksButton.disabled = true;
+  setHealthButtonsDisabled(true);
   healthReportEl.hidden = true;
   healthReportEl.replaceChildren();
   healthStatusEl.classList.remove('error', 'done');
@@ -427,7 +508,33 @@ analyzeBookmarksButton.addEventListener('click', () => {
       healthStatusEl.textContent = error instanceof Error ? error.message : String(error);
     })
     .finally(() => {
-      analyzeBookmarksButton.disabled = false;
+      setHealthButtonsDisabled(false);
+    });
+});
+
+checkDeadLinksButton.addEventListener('click', () => {
+  setHealthButtonsDisabled(true);
+  healthReportEl.hidden = true;
+  healthReportEl.replaceChildren();
+  healthStatusEl.classList.remove('error', 'done');
+  healthStatusEl.textContent = '正在申请网页访问权限';
+  void ensureDeadLinkPermissions()
+    .then(() => {
+      healthStatusEl.textContent = '正在联网检查失效链接';
+      return sendCheckDeadLinks();
+    })
+    .then((report) => {
+      healthStatusEl.classList.add('done');
+      healthStatusEl.textContent =
+        report.deadLinks.length === 0 ? '未发现可能失效链接' : `发现 ${report.deadLinks.length} 条需复查链接`;
+      renderDeadLinkReport(report);
+    })
+    .catch((error: unknown) => {
+      healthStatusEl.classList.add('error');
+      healthStatusEl.textContent = error instanceof Error ? error.message : String(error);
+    })
+    .finally(() => {
+      setHealthButtonsDisabled(false);
     });
 });
 

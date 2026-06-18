@@ -53,10 +53,13 @@
 
       <section class="card">
         <h2>书签体检</h2>
-        <button id="analyzeBookmarks" class="btn-secondary">检查重复书签</button>
+        <div class="actions-row">
+          <button id="analyzeBookmarks" class="btn-secondary">检查重复书签</button>
+          <button id="checkDeadLinks" class="btn-secondary">检查失效链接</button>
+        </div>
         <div id="healthStatus" class="status">未检查</div>
         <div id="healthReport" class="health-report" hidden></div>
-        <p class="note">只读本地分析,不访问网页,不修改原书签。</p>
+        <p class="note">重复检测零网络。失效链接检测会先请求网页访问权限,只生成报告,不修改原书签。</p>
       </section>
     </main>
     <script type="module" src="./popup.ts"></script>

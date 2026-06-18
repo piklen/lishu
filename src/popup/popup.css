@@ -226,6 +226,53 @@ button {
   color: #8b949e;
 }
 
+.dead-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 8px;
+  padding: 8px;
+  background: #fff;
+  border-top: 1px solid #eaeef2;
+}
+
+.dead-link:first-of-type {
+  border-top: none;
+}
+
+.dead-link-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0969da;
+}
+
+.dead-link-status {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.dead-link-status.broken {
+  color: #b42318;
+}
+
+.dead-link-status.unverified {
+  color: #9a6700;
+}
+
+.dead-link-meta {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #656d76;
+}
+
 .note {
   margin: 10px 0 0;
   font-size: 11px;
