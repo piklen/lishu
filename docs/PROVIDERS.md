@@ -103,6 +103,58 @@ Notes:
 - Chrome must be able to reach `http://127.0.0.1:1234` from the extension.
 - Local models vary in JSON-following quality. If categories fail to parse or drift away from the requested schema, try a stronger instruction-tuned model or a hosted OpenAI-compatible endpoint.
 
+## Local Model JSON Troubleshooting
+
+Lishu asks the model for JSON arrays during both category proposal and bookmark classification. It can extract simple JSON from markdown fences or short surrounding text, but it cannot repair an unstable model that changes the schema.
+
+Common symptoms:
+
+- The popup shows `LLM 响应不是合法 JSON`.
+- The model returns prose, markdown, comments, or multiple JSON blocks instead of one JSON value.
+- Category proposal returns a single object, nested fields, or category names without `description`.
+- Classification invents new category names instead of using the provided category list exactly.
+- Classification omits bookmark ids, changes `bookmarkId`, or returns confidence values as text.
+
+Local model caveats:
+
+- Smaller models often follow JSON-only instructions less reliably, especially with long bookmark batches.
+- Chat/instruct models are usually better than base completion models for schema-following.
+- Quantized models can work, but heavier quantization may reduce instruction-following reliability.
+- If failures happen only on large runs, lower the popup batch size before changing providers.
+- If output remains unstable, use a stronger local model or switch to a hosted OpenAI-compatible endpoint for the organizing run.
+
+Sanity-check the local OpenAI-compatible endpoint before running Lishu:
+
+```bash
+ENDPOINT=http://127.0.0.1:11434/v1
+MODEL=llama3.1
+
+curl "$ENDPOINT/chat/completions" \
+  -H 'Content-Type: application/json' \
+  -d "{
+    \"model\": \"$MODEL\",
+    \"messages\": [
+      {
+        \"role\": \"system\",
+        \"content\": \"Return JSON only. Do not use markdown.\"
+      },
+      {
+        \"role\": \"user\",
+        \"content\": \"Return exactly {\\\"ok\\\":true,\\\"items\\\":[\\\"a\\\",\\\"b\\\"]}.\"
+      }
+    ],
+    \"temperature\": 0
+  }"
+```
+
+Expected response shape:
+
+```json
+{"ok":true,"items":["a","b"]}
+```
+
+If you are using LM Studio, set `ENDPOINT=http://127.0.0.1:1234/v1` and `MODEL` to the served model id shown in LM Studio. If your private gateway requires an `Authorization` header, add the same header shape your gateway expects.
+
 ## Safety Notes
 
 - Never paste real API keys into issues, screenshots, or pull requests.
