@@ -109,6 +109,7 @@ Lishu stores configuration in `chrome.storage.local`.
 - Original bookmarks are not deleted, updated, or moved.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full data flow.
+See [PRIVACY.md](PRIVACY.md) for the public privacy policy.
 
 ## FAQ
 
@@ -166,7 +167,7 @@ docs/                  PRD, architecture, roadmap
 
 - [Add an LM Studio provider example](https://github.com/piklen/lishu/issues/18)
 - [Restore automatic CI after GitHub Actions billing is fixed](https://github.com/piklen/lishu/issues/8)
-- Chrome Web Store packaging
+- [Chrome Web Store listing prep](docs/STORE_LISTING.md)
 
 ## Contributing
 

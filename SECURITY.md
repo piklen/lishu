@@ -8,6 +8,8 @@ Lishu has not published a stable release yet. Security fixes are accepted on `ma
 
 Please report vulnerabilities through GitHub Security Advisories if available, or open a minimal issue that avoids publishing secrets, tokens, or private bookmark data.
 
+For privacy data-flow details, see [PRIVACY.md](PRIVACY.md).
+
 Include:
 
 - Affected commit or version.
