@@ -7,10 +7,13 @@ const STATUS_TEXT: Record<RunStatus, string> = {
   scanning: '正在扫描书签',
   categorizing: '正在生成分类体系',
   classifying: '正在分批归类',
+  preview: '等待确认写入',
   writing: '正在写入整理副本',
   done: '整理完成',
   error: '整理失败',
 };
+
+const OTHER_CATEGORY = '其他';
 
 function mustGet<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
@@ -26,10 +29,12 @@ const enrichModeSelect = mustGet<HTMLSelectElement>('enrichMode');
 const batchSizeInput = mustGet<HTMLInputElement>('batchSize');
 const saveButton = mustGet<HTMLButtonElement>('save');
 const startButton = mustGet<HTMLButtonElement>('start');
+const confirmWriteButton = mustGet<HTMLButtonElement>('confirmWrite');
 const resetButton = mustGet<HTMLButtonElement>('reset');
 const deleteOutputButton = mustGet<HTMLButtonElement>('deleteOutput');
 const statusEl = mustGet<HTMLDivElement>('status');
 const barFill = mustGet<HTMLDivElement>('barFill');
+const previewEl = mustGet<HTMLDivElement>('preview');
 
 interface ActionResponse {
   ok: boolean;
@@ -80,21 +85,79 @@ function percentOf(progress: Progress | null): number {
   if (!progress) return 0;
   if (progress.status === 'done') return 100;
   if (progress.status === 'writing') return 96;
+  if (progress.status === 'preview') return 95;
   if (progress.total > 0) return Math.min(95, Math.round((progress.processed / progress.total) * 100));
   if (progress.status === 'categorizing') return 5;
   if (progress.status === 'scanning') return 2;
   return 0;
 }
 
+function previewRows(progress: Progress): { name: string; count: number }[] {
+  const categoryNames = new Set(progress.categories.map((category) => category.name));
+  const counts = new Map(progress.categories.map((category) => [category.name, 0]));
+  let otherCount = 0;
+
+  for (const classification of progress.classifications) {
+    if (categoryNames.has(classification.category)) {
+      counts.set(classification.category, (counts.get(classification.category) ?? 0) + 1);
+    } else {
+      otherCount += 1;
+    }
+  }
+
+  otherCount += Math.max(0, progress.total - progress.classifications.length);
+  if (otherCount > 0) counts.set(OTHER_CATEGORY, (counts.get(OTHER_CATEGORY) ?? 0) + otherCount);
+
+  return Array.from(counts, ([name, count]) => ({ name, count }))
+    .filter((row) => row.count > 0)
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'));
+}
+
+function appendPreviewRow(parent: HTMLElement, name: string, count: string): void {
+  const row = document.createElement('div');
+  row.className = 'preview-row';
+  const nameEl = document.createElement('span');
+  nameEl.className = 'preview-name';
+  nameEl.textContent = name;
+  const countEl = document.createElement('span');
+  countEl.className = 'preview-count';
+  countEl.textContent = count;
+  row.append(nameEl, countEl);
+  parent.append(row);
+}
+
+function renderPreview(progress: Progress | null): void {
+  previewEl.replaceChildren();
+  if (progress?.status !== 'preview') {
+    previewEl.hidden = true;
+    return;
+  }
+
+  const header = document.createElement('div');
+  header.className = 'preview-header';
+  const nameHeader = document.createElement('span');
+  nameHeader.textContent = '分类预览';
+  const countHeader = document.createElement('span');
+  countHeader.textContent = '书签数';
+  header.append(nameHeader, countHeader);
+  previewEl.append(header);
+
+  for (const row of previewRows(progress)) appendPreviewRow(previewEl, row.name, String(row.count));
+  previewEl.hidden = false;
+}
+
 function renderProgress(progress: Progress | null): void {
   statusEl.classList.remove('error', 'done');
   const hasSavedProgress = !!progress && progress.status !== 'idle';
   const running = isRunning(progress);
+  const previewReady = progress?.status === 'preview';
   startButton.disabled = running;
-  startButton.textContent = progress?.status === 'done' ? '重新整理' : '开始整理';
+  startButton.textContent = previewReady ? '重新生成预览' : progress?.status === 'done' ? '重新整理' : '开始整理';
+  confirmWriteButton.disabled = !previewReady || running;
   resetButton.disabled = !hasSavedProgress || running;
   deleteOutputButton.disabled = !progress?.rootFolderId || running;
   barFill.style.width = `${percentOf(progress)}%`;
+  renderPreview(progress);
 
   if (!progress) {
     statusEl.textContent = '待命';
@@ -104,6 +167,12 @@ function renderProgress(progress: Progress | null): void {
   if (progress.status === 'error') {
     statusEl.classList.add('error');
     statusEl.textContent = `${STATUS_TEXT.error}: ${progress.error ?? '未知错误'}`;
+    return;
+  }
+
+  if (progress.status === 'preview') {
+    const categoryCount = progress.categories.length;
+    statusEl.textContent = `预览就绪: ${progress.total} 个书签 / ${categoryCount} 个分类,确认后才会写入副本`;
     return;
   }
 
@@ -160,6 +229,16 @@ function ensureHostPermissions(config: AppConfig): Promise<void> {
 function sendStart(): Promise<void> {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage({ type: 'START' } satisfies Message, () => {
+      const lastError = chrome.runtime.lastError;
+      if (lastError) reject(new Error(lastError.message));
+      else resolve();
+    });
+  });
+}
+
+function sendConfirmWrite(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ type: 'CONFIRM_WRITE' } satisfies Message, () => {
       const lastError = chrome.runtime.lastError;
       if (lastError) reject(new Error(lastError.message));
       else resolve();
@@ -224,6 +303,17 @@ startButton.addEventListener('click', () => {
     statusEl.classList.add('error');
     statusEl.textContent = error instanceof Error ? error.message : String(error);
     startButton.disabled = false;
+  });
+});
+
+confirmWriteButton.addEventListener('click', () => {
+  confirmWriteButton.disabled = true;
+  statusEl.classList.remove('error');
+  statusEl.textContent = '正在写入整理副本';
+  void sendConfirmWrite().catch((error: unknown) => {
+    statusEl.classList.add('error');
+    statusEl.textContent = error instanceof Error ? error.message : String(error);
+    confirmWriteButton.disabled = false;
   });
 });
 

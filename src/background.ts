@@ -1,7 +1,7 @@
 // service worker 入口 —— 接 popup 消息,编排整条整理管线
 import type { Message, Progress } from './types';
 import { clearProgress, loadConfig, saveProgress, loadProgress } from './core/storage';
-import { runOrganize } from './core/pipeline';
+import { runOrganize, writePreviewedOrganize } from './core/pipeline';
 import { removeGeneratedFolder } from './core/bookmarks';
 
 let running = false;
@@ -22,11 +22,41 @@ async function handleStart(): Promise<void> {
       throw new Error('请先填写大模型 endpoint / key / model 并保存');
     }
     const savedProgress = await loadProgress();
+    const resumableProgress = savedProgress?.status === 'preview' ? null : savedProgress;
     await runOrganize(config, async (p) => {
       lastProgress = p;
       await saveProgress(p);
       broadcast(p);
-    }, savedProgress);
+    }, resumableProgress, { previewBeforeWrite: true });
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e);
+    const base: Progress = lastProgress ?? {
+      status: 'error',
+      total: 0,
+      processed: 0,
+      categories: [],
+      classifications: [],
+    };
+    const errProgress: Progress = { ...base, status: 'error', error };
+    lastProgress = errProgress;
+    await saveProgress(errProgress);
+    broadcast(errProgress);
+  } finally {
+    running = false;
+  }
+}
+
+async function handleConfirmWrite(): Promise<void> {
+  if (running) return;
+  running = true;
+  try {
+    const savedProgress = await loadProgress();
+    if (!savedProgress) throw new Error('没有可写入的分类预览');
+    await writePreviewedOrganize(savedProgress, async (p) => {
+      lastProgress = p;
+      await saveProgress(p);
+      broadcast(p);
+    });
   } catch (e) {
     const error = e instanceof Error ? e.message : String(e);
     const base: Progress = lastProgress ?? {
@@ -75,6 +105,11 @@ async function handleDeleteLastOutput(): Promise<Progress> {
 chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) => {
   if (message.type === 'START') {
     void handleStart();
+    sendResponse({ ok: true });
+    return undefined;
+  }
+  if (message.type === 'CONFIRM_WRITE') {
+    void handleConfirmWrite();
     sendResponse({ ok: true });
     return undefined;
   }

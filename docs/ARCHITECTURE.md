@@ -18,6 +18,9 @@
         │  每批后 core/storage.ts 写进度(service worker 被杀可续跑)
         │  chrome.runtime.sendMessage 把进度推回 popup
         ▼
+   popup 显示分类预览(每个分类的书签数量)
+        │  用户确认后 chrome.runtime.sendMessage({type:'CONFIRM_WRITE'})
+        ▼
    4. core/bookmarks.ts(非破坏写入)
         create「📚 理书整理 YYYY-MM-DD」顶层文件夹 → 按类建子夹 → create 书签副本
         (只 create,绝不 remove/update 原书签)
@@ -29,11 +32,11 @@
 
 | 模块 | 职责 |
 |---|---|
-| `background.ts` | service worker 入口;接 popup 消息;编排整条管线;管进度/生命周期 |
-| `popup/popup.ts` | UI:配置 LLM、选探查档位、触发、显示进度与摘要(vanilla TS) |
+| `background.ts` | service worker 入口;接 popup 消息;编排预览与确认写入;管进度/生命周期 |
+| `popup/popup.ts` | UI:配置 LLM、选探查档位、触发、显示预览/进度/摘要(vanilla TS) |
 | `core/bookmarks.ts` | 读 getTree + 扁平化;非破坏式 create 文件夹与副本 |
 | `core/classify.ts` | Pass A 定类目 / Pass B 归类;组装 prompt + 解析 JSON |
-| `core/pipeline.ts` | 批处理(30~50/批)+ 进度持久化 + 可中断续跑 |
+| `core/pipeline.ts` | 批处理(30~50/批)+ 进度持久化 + 分类预览停点 + 可中断续跑 |
 | `core/storage.ts` | chrome.storage.local 读写配置与进度 |
 | `providers/types.ts` | `LlmProvider` / `EnrichProvider` 接口 |
 | `providers/llm.ts` | OpenAI 兼容 `/v1/chat/completions` 调用 |
@@ -49,6 +52,8 @@
 **MV3 service worker 生命周期**:worker 空闲约 30s 被回收。对策:`pipeline.ts` 分批,每批后把"已完成 + 待办批次"写 storage.local;worker 重启从进度续跑。v1 用户触发后保持 popup 打开即可覆盖多数场景,续跑为健壮性兜底。
 
 **非破坏式(铁律)**:整理流程只 `chrome.bookmarks.create`,绝不 `remove`/`update` 原书签。popup 的“删除上次结果”只允许删除标题前缀为「📚 理书整理」的生成文件夹,用于清理本工具创建的输出。
+
+**写入前预览(信任闸门)**:分类完成后 progress 进入 `preview`,popup 只展示每个分类的数量,不创建任何书签。用户点“确认写入副本”后才进入 `writing` 并调用 `chrome.bookmarks.create`。这把高成本的 LLM 分类和高敏感的书签写入拆成两步,降低误操作风险。
 
 ## 权限与隐私
 

@@ -6,6 +6,10 @@ import { createEnrichProvider } from '../providers/enrich';
 
 export type ProgressFn = (p: Progress) => void | Promise<void>;
 
+export interface RunOrganizeOptions {
+  previewBeforeWrite?: boolean;
+}
+
 function freshProgress(): Progress {
   return {
     status: 'scanning',
@@ -17,13 +21,66 @@ function freshProgress(): Progress {
 }
 
 function isResumable(progress: Progress | null | undefined): progress is Progress {
-  return !!progress && progress.status !== 'done' && progress.status !== 'idle';
+  return (
+    !!progress &&
+    progress.status !== 'done' &&
+    progress.status !== 'idle' &&
+    progress.status !== 'preview'
+  );
+}
+
+function createEmitter(progress: Progress, onProgress: ProgressFn): (patch: Partial<Progress>) => Promise<void> {
+  return async (patch: Partial<Progress>): Promise<void> => {
+    Object.assign(progress, patch);
+    await onProgress(progress);
+  };
+}
+
+async function writeClassifiedProgress(progress: Progress, onProgress: ProgressFn): Promise<Progress> {
+  const emit = createEmitter(progress, onProgress);
+  const bookmarks = await getAllBookmarks();
+  const currentBookmarkIds = new Set(bookmarks.map((b) => b.id));
+  const classifications = progress.classifications.filter((c) => currentBookmarkIds.has(c.bookmarkId));
+
+  await emit({
+    status: 'writing',
+    total: bookmarks.length,
+    processed: classifications.length,
+    classifications,
+    rootFolderId: undefined,
+  });
+  const rootFolderId = await writeOrganized(bookmarks, progress.categories, classifications, async (id) => {
+    await emit({ rootFolderId: id });
+  });
+  await emit({ status: 'done', processed: bookmarks.length, rootFolderId });
+  return progress;
+}
+
+export async function writePreviewedOrganize(
+  savedProgress: Progress,
+  onProgress: ProgressFn,
+): Promise<Progress> {
+  if (savedProgress.status !== 'preview') {
+    throw new Error('没有可写入的分类预览');
+  }
+  if (savedProgress.categories.length === 0) {
+    throw new Error('分类预览不完整,请重新整理');
+  }
+  return writeClassifiedProgress(
+    {
+      ...savedProgress,
+      error: undefined,
+      rootFolderId: undefined,
+    },
+    onProgress,
+  );
 }
 
 export async function runOrganize(
   config: AppConfig,
   onProgress: ProgressFn,
   savedProgress?: Progress | null,
+  options: RunOrganizeOptions = {},
 ): Promise<Progress> {
   const progress: Progress = isResumable(savedProgress)
     ? {
@@ -33,10 +90,7 @@ export async function runOrganize(
         rootFolderId: undefined,
       }
     : freshProgress();
-  const emit = async (patch: Partial<Progress>): Promise<void> => {
-    Object.assign(progress, patch);
-    await onProgress(progress);
-  };
+  const emit = createEmitter(progress, onProgress);
 
   // 1. 扫描全部书签
   const bookmarks = await getAllBookmarks();
@@ -86,11 +140,11 @@ export async function runOrganize(
     classifications: [...existingClassifications, ...classifications],
   });
 
+  if (options.previewBeforeWrite) {
+    await emit({ status: 'preview' });
+    return progress;
+  }
+
   // 5. 非破坏式写入(用原始 bookmarks,title 干净)
-  await emit({ status: 'writing' });
-  const rootFolderId = await writeOrganized(bookmarks, categories, progress.classifications, async (id) => {
-    await emit({ rootFolderId: id });
-  });
-  await emit({ status: 'done', rootFolderId });
-  return progress;
+  return writeClassifiedProgress(progress, onProgress);
 }

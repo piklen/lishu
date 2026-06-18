@@ -64,6 +64,10 @@ button {
   cursor: default;
 }
 
+.btn-confirm {
+  margin-top: 8px;
+}
+
 .btn-secondary {
   background: #f3f4f6;
   color: #1f2328;
@@ -119,6 +123,54 @@ button {
   width: 0;
   background: #1f6feb;
   transition: width 0.3s ease;
+}
+
+.preview {
+  margin-top: 10px;
+  max-height: 150px;
+  overflow: auto;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  background: #f6f8fa;
+}
+
+.preview-header,
+.preview-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 8px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.preview-header {
+  color: #656d76;
+  font-weight: 600;
+  border-bottom: 1px solid #d8dee4;
+}
+
+.preview-row {
+  color: #1f2328;
+  background: #fff;
+  border-top: 1px solid #eaeef2;
+}
+
+.preview-row:first-of-type {
+  border-top: none;
+}
+
+.preview-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-count {
+  flex: 0 0 auto;
+  color: #656d76;
+  font-weight: 600;
 }
 
 .note {
