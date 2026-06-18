@@ -62,6 +62,8 @@ Fast path:
 4. Enable **Developer mode**.
 5. Click **Load unpacked** and select the unzipped folder.
 
+See [docs/INSTALL.md](docs/INSTALL.md) for a visual load-unpacked guide.
+
 Release zip verification:
 
 - Download release zips only from the official [GitHub Releases](https://github.com/piklen/lishu/releases) page.
