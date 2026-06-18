@@ -46,7 +46,7 @@ Model: your-routing-model
 
 Your gateway must expose an OpenAI-compatible `/chat/completions` endpoint.
 
-## Local OpenAI-Compatible Gateway
+## Ollama-Compatible Local Gateway
 
 ```text
 Protocol: OpenAI compatible
@@ -54,7 +54,32 @@ Endpoint: http://127.0.0.1:11434/v1
 Model: llama3.1
 ```
 
-Local gateways depend on your local runtime. Confirm that your chosen runtime exposes the OpenAI-compatible API shape before using it with Lishu.
+Typical local setup:
+
+```bash
+ollama pull llama3.1
+ollama serve
+```
+
+Notes:
+
+- Lishu talks to Ollama through its OpenAI-compatible `/v1/chat/completions` API.
+- The endpoint field should stop at `/v1`; Lishu appends `/chat/completions` internally.
+- Chrome must be able to reach `http://127.0.0.1:11434` from the extension.
+- Local models vary in JSON-following quality. If classification output is unstable, try a stronger local model or a hosted OpenAI-compatible endpoint.
+
+You can sanity-check the local API outside Lishu:
+
+```bash
+curl http://127.0.0.1:11434/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "llama3.1",
+    "messages": [{"role": "user", "content": "Return {\"ok\":true} as JSON only."}]
+  }'
+```
+
+Other local OpenAI-compatible runtimes can work too, as long as they expose the same `/chat/completions` API shape.
 
 ## Safety Notes
 
