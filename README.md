@@ -1,5 +1,6 @@
 # Lishu (理书)
 
+[![CI](https://github.com/piklen/lishu/actions/workflows/ci.yml/badge.svg)](https://github.com/piklen/lishu/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 AI-powered Chrome bookmark organizer. Lishu scans your bookmarks, asks your own LLM to classify them, and writes the result into a new folder. Your original bookmark tree is not moved, edited, or deleted.
