@@ -81,6 +81,28 @@ curl http://127.0.0.1:11434/v1/chat/completions \
 
 Other local OpenAI-compatible runtimes can work too, as long as they expose the same `/chat/completions` API shape.
 
+## LM Studio Local Server
+
+Reference: [LM Studio OpenAI compatibility docs](https://lmstudio.ai/docs/developer/openai-compat).
+
+```text
+Protocol: OpenAI compatible
+Endpoint: http://127.0.0.1:1234/v1
+Model: local-model
+```
+
+Typical local setup:
+
+1. Open LM Studio and download a chat/instruct model.
+2. Start the local server from LM Studio's developer or server view.
+3. Copy the served model id into Lishu's **Model** field.
+
+Notes:
+
+- The endpoint field should stop at `/v1`; Lishu appends `/chat/completions` internally.
+- Chrome must be able to reach `http://127.0.0.1:1234` from the extension.
+- Local models vary in JSON-following quality. If categories fail to parse or drift away from the requested schema, try a stronger instruction-tuned model or a hosted OpenAI-compatible endpoint.
+
 ## Safety Notes
 
 - Never paste real API keys into issues, screenshots, or pull requests.
