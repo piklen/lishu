@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest a focused improvement for Lishu.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should Lishu do differently?
+    validations:
+      required: true
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Design Constraints
+      options:
+        - label: This keeps original bookmarks non-destructive.
+          required: true
+        - label: This does not require a Lishu backend service.
+          required: true
+        - label: This does not add telemetry or bundled API keys.
+          required: true

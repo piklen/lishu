@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Category, Classification, FlatBookmark } from '../types';
-import { bucketByCategory, flattenTree } from './bookmarks';
+import { bucketByCategory, flattenTree, removeGeneratedFolder, writeOrganized } from './bookmarks';
 
 describe('flattenTree', () => {
   it('只收集有 url 的叶子节点并保留父级路径', () => {
@@ -63,5 +63,56 @@ describe('bucketByCategory', () => {
 
     expect(buckets.get('开发工具')).toEqual([bookmarks[0]]);
     expect(buckets.get('其他')).toEqual([bookmarks[1], bookmarks[2]]);
+  });
+});
+
+describe('writeOrganized', () => {
+  beforeEach(() => {
+    let createdId = 10;
+    vi.stubGlobal('chrome', {
+      bookmarks: {
+        create: vi.fn(async () => ({ id: String((createdId += 1)) })),
+      },
+    });
+  });
+
+  it('新建输出根目录后回传 rootFolderId,便于失败后清理', async () => {
+    const onRootCreated = vi.fn();
+    const rootFolderId = await writeOrganized(
+      [{ id: 'a', title: 'A', url: 'https://a.example/' }],
+      [{ name: '工具', description: '工具站点' }],
+      [{ bookmarkId: 'a', category: '工具', confidence: 0.9 }],
+      onRootCreated,
+    );
+
+    expect(rootFolderId).toBe('11');
+    expect(onRootCreated).toHaveBeenCalledWith('11');
+  });
+});
+
+describe('removeGeneratedFolder', () => {
+  it('只删除理书生成的整理文件夹', async () => {
+    const removeTree = vi.fn(async () => undefined);
+    vi.stubGlobal('chrome', {
+      bookmarks: {
+        get: vi.fn(async () => [{ id: 'x', title: '📚 理书整理 2026-06-18' }]),
+        removeTree,
+      },
+    });
+
+    await removeGeneratedFolder('x');
+
+    expect(removeTree).toHaveBeenCalledWith('x');
+  });
+
+  it('拒绝删除非理书生成文件夹', async () => {
+    vi.stubGlobal('chrome', {
+      bookmarks: {
+        get: vi.fn(async () => [{ id: 'x', title: '书签栏' }]),
+        removeTree: vi.fn(),
+      },
+    });
+
+    await expect(removeGeneratedFolder('x')).rejects.toThrow('拒绝删除');
   });
 });

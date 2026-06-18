@@ -74,6 +74,7 @@ export interface Progress {
 /** popup <-> background 消息协议 */
 export type Message =
   | { type: 'START' }
-  | { type: 'CANCEL' }
   | { type: 'GET_PROGRESS' }
+  | { type: 'RESET_PROGRESS' }
+  | { type: 'DELETE_LAST_OUTPUT' }
   | { type: 'PROGRESS'; progress: Progress };

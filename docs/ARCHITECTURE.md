@@ -48,12 +48,12 @@
 
 **MV3 service worker 生命周期**:worker 空闲约 30s 被回收。对策:`pipeline.ts` 分批,每批后把"已完成 + 待办批次"写 storage.local;worker 重启从进度续跑。v1 用户触发后保持 popup 打开即可覆盖多数场景,续跑为健壮性兜底。
 
-**非破坏式(铁律)**:`bookmarks.ts` 只 `chrome.bookmarks.create`,绝不 `remove`/`update`。失败可整体删该顶层文件夹重来,原书签零风险。
+**非破坏式(铁律)**:整理流程只 `chrome.bookmarks.create`,绝不 `remove`/`update` 原书签。popup 的“删除上次结果”只允许删除标题前缀为「📚 理书整理」的生成文件夹,用于清理本工具创建的输出。
 
 ## 权限与隐私
 
 - `permissions: ["bookmarks","storage"]`
-- `host_permissions: ["<all_urls>"]` —— 调用户自配的任意 LLM endpoint + meta-scrape 抓任意域名首页都需要。v1 求简单用 `<all_urls>`,**v2 收紧为 `optional_host_permissions` 动态申请**。
+- `optional_host_permissions: ["<all_urls>"]` —— 默认运行只动态申请用户配置的大模型 endpoint origin;用户选择 meta-scrape 时才申请更宽的网页访问权限。
 - API key 存 `chrome.storage.local`(不用 `storage.sync`,避免 key 同步上云)。
 - 默认 world-knowledge 只发 `URL+标题`;meta-scrape 默认关。
 

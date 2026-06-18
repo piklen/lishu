@@ -1,0 +1,50 @@
+name: Bug report
+description: Report a reproducible Lishu problem.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction Steps
+      description: List the exact steps needed to reproduce the issue.
+      placeholder: |
+        1. Build with ...
+        2. Load dist/ in Chrome ...
+        3. Click ...
+    validations:
+      required: true
+  - type: input
+    id: chrome-version
+    attributes:
+      label: Browser Version
+      placeholder: "Chrome 126.0.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: enrich-mode
+    attributes:
+      label: Enrichment Mode
+      options:
+        - world-knowledge
+        - meta-scrape
+    validations:
+      required: true
+  - type: input
+    id: llm-provider
+    attributes:
+      label: LLM Provider
+      placeholder: "OpenAI / Anthropic / DeepSeek / OpenRouter / local gateway"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs
+      description: Paste console errors after removing API keys and private bookmark data.
+      render: text

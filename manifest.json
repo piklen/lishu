@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "description": "用大模型自动整理 Chrome 书签栏 —— 非破坏式分类到新文件夹",
   "permissions": ["bookmarks", "storage"],
-  "host_permissions": ["<all_urls>"],
+  "optional_host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "src/background.ts",
     "type": "module"

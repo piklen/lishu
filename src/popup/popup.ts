@@ -26,8 +26,16 @@ const enrichModeSelect = mustGet<HTMLSelectElement>('enrichMode');
 const batchSizeInput = mustGet<HTMLInputElement>('batchSize');
 const saveButton = mustGet<HTMLButtonElement>('save');
 const startButton = mustGet<HTMLButtonElement>('start');
+const resetButton = mustGet<HTMLButtonElement>('reset');
+const deleteOutputButton = mustGet<HTMLButtonElement>('deleteOutput');
 const statusEl = mustGet<HTMLDivElement>('status');
 const barFill = mustGet<HTMLDivElement>('barFill');
+
+interface ActionResponse {
+  ok: boolean;
+  progress?: Progress;
+  error?: string;
+}
 
 function readForm(): AppConfig {
   return normalizeConfig({
@@ -80,7 +88,12 @@ function percentOf(progress: Progress | null): number {
 
 function renderProgress(progress: Progress | null): void {
   statusEl.classList.remove('error', 'done');
-  startButton.disabled = isRunning(progress);
+  const hasSavedProgress = !!progress && progress.status !== 'idle';
+  const running = isRunning(progress);
+  startButton.disabled = running;
+  startButton.textContent = progress?.status === 'done' ? '重新整理' : '开始整理';
+  resetButton.disabled = !hasSavedProgress || running;
+  deleteOutputButton.disabled = !progress?.rootFolderId || running;
   barFill.style.width = `${percentOf(progress)}%`;
 
   if (!progress) {
@@ -105,12 +118,68 @@ function renderProgress(progress: Progress | null): void {
   statusEl.textContent = `${STATUS_TEXT[progress.status]} ${count}`.trim();
 }
 
+function endpointOriginPattern(endpoint: string): string {
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    throw new Error('Endpoint 必须是完整的 http(s) 地址');
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new Error('Endpoint 必须使用 http 或 https');
+  }
+  return `${url.origin}/*`;
+}
+
+function requestOrigins(origins: string[]): Promise<void> {
+  const uniqueOrigins = Array.from(new Set(origins));
+  if (uniqueOrigins.length === 0) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    chrome.permissions.request({ origins: uniqueOrigins }, (granted) => {
+      const lastError = chrome.runtime.lastError;
+      if (lastError) {
+        reject(new Error(lastError.message));
+        return;
+      }
+      if (!granted) {
+        reject(new Error('需要授权访问大模型 endpoint 后才能开始整理'));
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+function ensureHostPermissions(config: AppConfig): Promise<void> {
+  if (config.enrichMode === 'meta-scrape') {
+    return requestOrigins(['<all_urls>']);
+  }
+  return requestOrigins([endpointOriginPattern(config.llm.endpoint)]);
+}
+
 function sendStart(): Promise<void> {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage({ type: 'START' } satisfies Message, () => {
       const lastError = chrome.runtime.lastError;
       if (lastError) reject(new Error(lastError.message));
       else resolve();
+    });
+  });
+}
+
+function sendAction(type: 'RESET_PROGRESS' | 'DELETE_LAST_OUTPUT'): Promise<Progress | null> {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ type } satisfies Message, (response: ActionResponse | undefined) => {
+      const lastError = chrome.runtime.lastError;
+      if (lastError) {
+        reject(new Error(lastError.message));
+        return;
+      }
+      if (!response?.ok) {
+        reject(new Error(response?.error ?? '操作失败'));
+        return;
+      }
+      resolve(response.progress ?? null);
     });
   });
 }
@@ -137,10 +206,12 @@ protocolSelect.addEventListener('change', updateProtocolHints);
 
 startButton.addEventListener('click', () => {
   void (async () => {
-    const config = await saveCurrentConfig();
+    const config = readForm();
     if (!config.llm.endpoint || !config.llm.apiKey || !config.llm.model) {
       throw new Error('请先填写 endpoint / API key / model');
     }
+    await ensureHostPermissions(config);
+    await saveConfig(config);
     renderProgress({
       status: 'scanning',
       total: 0,
@@ -154,6 +225,24 @@ startButton.addEventListener('click', () => {
     statusEl.textContent = error instanceof Error ? error.message : String(error);
     startButton.disabled = false;
   });
+});
+
+resetButton.addEventListener('click', () => {
+  void sendAction('RESET_PROGRESS')
+    .then((progress) => renderProgress(progress))
+    .catch((error: unknown) => {
+      statusEl.classList.add('error');
+      statusEl.textContent = error instanceof Error ? error.message : String(error);
+    });
+});
+
+deleteOutputButton.addEventListener('click', () => {
+  void sendAction('DELETE_LAST_OUTPUT')
+    .then((progress) => renderProgress(progress))
+    .catch((error: unknown) => {
+      statusEl.classList.add('error');
+      statusEl.textContent = error instanceof Error ? error.message : String(error);
+    });
 });
 
 chrome.runtime.onMessage.addListener((message: Message) => {

@@ -18,7 +18,7 @@
    - meta-scrape(可选):抓网站**首页** meta 增强,不进具体深层页面
    - search-api:留接口,v1 不实现
 5. **非破坏式写入** —— 新建「📚 理书整理 YYYY-MM-DD」顶层文件夹,放分类副本,**原书签栏不动**
-6. **popup** —— 配置 LLM、选探查档位、触发、显示进度、完成摘要
+6. **popup** —— 配置 LLM、选探查档位、触发、显示进度、完成摘要、清除进度、删除上次整理结果
 
 ## 不做什么(v1 边界)
 
@@ -34,3 +34,4 @@
 - 默认 world-knowledge:只把 `URL+标题` 发给用户自己配的 LLM
 - meta-scrape 默认关,用户开启才抓首页 meta
 - API key 存 `chrome.storage.local`(本地、不云同步)
+- 默认只申请用户配置的大模型 endpoint 访问权限;只有开启 meta-scrape 时才申请网页访问权限

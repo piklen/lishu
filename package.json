@@ -1,9 +1,28 @@
 {
   "name": "lishu",
   "version": "0.0.1",
-  "description": "用大模型自动整理 Chrome 书签栏 —— 非破坏式分类到新文件夹",
+  "description": "AI-powered Chrome bookmark organizer that classifies bookmarks into a new folder without touching originals.",
   "type": "module",
-  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/piklen/lishu.git"
+  },
+  "bugs": {
+    "url": "https://github.com/piklen/lishu/issues"
+  },
+  "homepage": "https://github.com/piklen/lishu#readme",
+  "keywords": [
+    "bookmarks",
+    "chrome-extension",
+    "llm",
+    "ai",
+    "mv3",
+    "productivity"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "packageManager": "pnpm@10.13.1",
   "scripts": {
     "dev": "vite",
