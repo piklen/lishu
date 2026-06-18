@@ -62,6 +62,19 @@ Fast path:
 4. Enable **Developer mode**.
 5. Click **Load unpacked** and select the unzipped folder.
 
+Release zip verification:
+
+- Download release zips only from the official [GitHub Releases](https://github.com/piklen/lishu/releases) page.
+- The `v0.0.3` release asset digest is `sha256:05508e089a2102a5d74212f75f787b725556c278a514bf09b5f226c346e897ce`.
+- To verify a downloaded zip on macOS or Linux, run:
+
+```bash
+shasum -a 256 lishu-0.0.3.zip
+```
+
+- Compare the output with the release asset digest, without the `sha256:` prefix.
+- If you prefer not to use a prebuilt zip, build from source and load `dist/`.
+
 Build from source:
 
 ```bash
