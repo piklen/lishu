@@ -88,7 +88,9 @@ export async function runOrganize(
 
   // 5. 非破坏式写入(用原始 bookmarks,title 干净)
   await emit({ status: 'writing' });
-  const rootFolderId = await writeOrganized(bookmarks, categories, progress.classifications);
+  const rootFolderId = await writeOrganized(bookmarks, categories, progress.classifications, async (id) => {
+    await emit({ rootFolderId: id });
+  });
   await emit({ status: 'done', rootFolderId });
   return progress;
 }

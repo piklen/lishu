@@ -2,6 +2,7 @@
 import type { FlatBookmark, Category, Classification } from '../types';
 
 const OTHER = '其他';
+const GENERATED_ROOT_PREFIX = '📚 理书整理';
 
 /** 递归扁平化书签树,只收集有 url 的叶子节点 */
 export function flattenTree(nodes: chrome.bookmarks.BookmarkTreeNode[]): FlatBookmark[] {
@@ -60,10 +61,12 @@ export async function writeOrganized(
   bookmarks: FlatBookmark[],
   categories: Category[],
   classifications: Classification[],
+  onRootCreated?: (rootFolderId: string) => void | Promise<void>,
 ): Promise<string> {
   const buckets = bucketByCategory(bookmarks, categories, classifications);
   // 不指定 parentId → 默认落在「其他书签」,不动书签栏
-  const root = await chrome.bookmarks.create({ title: `📚 理书整理 ${dateStamp()}` });
+  const root = await chrome.bookmarks.create({ title: `${GENERATED_ROOT_PREFIX} ${dateStamp()}` });
+  await onRootCreated?.(root.id);
   for (const [catName, items] of buckets) {
     if (items.length === 0) continue;
     const folder = await chrome.bookmarks.create({ parentId: root.id, title: catName });
@@ -72,4 +75,14 @@ export async function writeOrganized(
     }
   }
   return root.id;
+}
+
+/** 只允许删除理书生成的顶层整理结果,避免误删用户原始书签树 */
+export async function removeGeneratedFolder(rootFolderId: string): Promise<void> {
+  const nodes = await chrome.bookmarks.get(rootFolderId);
+  const root = nodes[0];
+  if (!root || root.url || !root.title.startsWith(GENERATED_ROOT_PREFIX)) {
+    throw new Error('拒绝删除:目标不是理书生成的整理文件夹');
+  }
+  await chrome.bookmarks.removeTree(rootFolderId);
 }

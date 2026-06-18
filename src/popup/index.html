@@ -33,16 +33,20 @@
           </select>
         </label>
         <label>每批数量
-          <input id="batchSize" type="number" min="1" max="100" step="1" />
+          <input id="batchSize" type="number" min="1" max="100" step="1" value="40" />
         </label>
         <button id="save" class="btn-secondary">保存配置</button>
       </section>
 
       <section class="card">
         <button id="start" class="btn-primary">开始整理</button>
+        <div class="actions-row">
+          <button id="reset" class="btn-secondary" disabled>清除进度</button>
+          <button id="deleteOutput" class="btn-danger" disabled>删除上次结果</button>
+        </div>
         <div id="status" class="status">待命</div>
         <div class="bar"><div id="barFill" class="bar-fill"></div></div>
-        <p class="note">整理结果会放进新建的「📚 理书整理 日期」文件夹,原书签不动。</p>
+        <p class="note">原书签不动。默认只授权 LLM endpoint;抓首页时才申请网页访问。</p>
       </section>
     </main>
     <script type="module" src="./popup.ts"></script>

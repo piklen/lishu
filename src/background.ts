@@ -1,7 +1,8 @@
 // service worker 入口 —— 接 popup 消息,编排整条整理管线
 import type { Message, Progress } from './types';
-import { loadConfig, saveProgress, loadProgress } from './core/storage';
+import { clearProgress, loadConfig, saveProgress, loadProgress } from './core/storage';
 import { runOrganize } from './core/pipeline';
+import { removeGeneratedFolder } from './core/bookmarks';
 
 let running = false;
 let lastProgress: Progress | null = null;
@@ -44,6 +45,33 @@ async function handleStart(): Promise<void> {
   }
 }
 
+function idleProgress(): Progress {
+  return {
+    status: 'idle',
+    total: 0,
+    processed: 0,
+    categories: [],
+    classifications: [],
+  };
+}
+
+async function handleResetProgress(): Promise<Progress> {
+  await clearProgress();
+  const progress = idleProgress();
+  lastProgress = progress;
+  broadcast(progress);
+  return progress;
+}
+
+async function handleDeleteLastOutput(): Promise<Progress> {
+  const progress = await loadProgress();
+  if (!progress?.rootFolderId) {
+    throw new Error('没有可删除的理书整理结果');
+  }
+  await removeGeneratedFolder(progress.rootFolderId);
+  return handleResetProgress();
+}
+
 chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) => {
   if (message.type === 'START') {
     void handleStart();
@@ -53,6 +81,22 @@ chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) =
   if (message.type === 'GET_PROGRESS') {
     void loadProgress().then((p) => sendResponse(p));
     return true; // 异步 sendResponse,保持消息通道开启
+  }
+  if (message.type === 'RESET_PROGRESS') {
+    void handleResetProgress()
+      .then((progress) => sendResponse({ ok: true, progress }))
+      .catch((error: unknown) =>
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) }),
+      );
+    return true;
+  }
+  if (message.type === 'DELETE_LAST_OUTPUT') {
+    void handleDeleteLastOutput()
+      .then((progress) => sendResponse({ ok: true, progress }))
+      .catch((error: unknown) =>
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) }),
+      );
+    return true;
   }
   return undefined;
 });
