@@ -114,6 +114,7 @@ Lishu stores configuration in `chrome.storage.local`.
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full data flow.
 See [PRIVACY.md](PRIVACY.md) for the public privacy policy.
 See [docs/LAUNCH.md](docs/LAUNCH.md) for launch and feedback-posting drafts.
+See [docs/SAMPLE_DATA.md](docs/SAMPLE_DATA.md) for synthetic bookmark data for public screenshots and manual QA.
 
 ## FAQ
 
@@ -170,7 +171,6 @@ docs/                  PRD, architecture, roadmap
 ## Roadmap
 
 - [Chrome Web Store listing prep](docs/STORE_LISTING.md)
-- [Add safe sample bookmark fixtures for docs and screenshots](https://github.com/piklen/lishu/issues/25)
 - [Add editable category names before writing copies](https://github.com/piklen/lishu/issues/26)
 - [Add local-model JSON troubleshooting notes](https://github.com/piklen/lishu/issues/27)
 

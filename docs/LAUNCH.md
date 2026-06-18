@@ -8,7 +8,7 @@
 - GitHub: https://github.com/piklen/lishu
 - Latest release: https://github.com/piklen/lishu/releases/latest
 - Privacy policy: https://github.com/piklen/lishu/blob/main/PRIVACY.md
-- Good first issue: https://github.com/piklen/lishu/issues/18
+- Good first issues: https://github.com/piklen/lishu/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22
 
 ## Positioning
 
@@ -155,6 +155,7 @@ Lishu is a local-first Chrome bookmark organizer. It uses your own OpenAI-compat
 - [ ] Confirm CI badge is green.
 - [ ] Confirm https://piklen.github.io/lishu/ returns HTTP 200.
 - [ ] Confirm screenshots do not expose real API keys, private bookmarks, or personal account data.
+- [ ] Use `docs/fixtures/sample-bookmarks.html` for public screenshots unless a real screenshot has been reviewed and redacted.
 - [ ] Pick one primary feedback question before posting.
 - [ ] Do not post the same text to many communities on the same day.
 - [ ] Watch issues for the first 24 hours after posting.
