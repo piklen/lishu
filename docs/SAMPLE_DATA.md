@@ -27,3 +27,15 @@ Use an isolated Chrome profile so the sample import does not mix with personal b
 7. Run Lishu and capture the category preview, completion state, duplicate report, or settings screenshots.
 
 Before publishing a screenshot, check that the image contains only synthetic bookmark titles, synthetic URLs, and placeholder provider settings.
+
+## Editable Preview Screenshot Checklist
+
+Use this checklist for public README, Store listing, launch, or issue screenshots of the category preview state.
+
+- Use `docs/fixtures/sample-bookmarks.html`, not a real Chrome bookmark export.
+- Capture the `preview` state before clicking **确认写入副本 / Confirm write copy**.
+- Show several category rows with visible bookmark counts.
+- Edit at least one category name so the screenshot demonstrates that generated category names are adjustable before writing.
+- Keep the generated output folder unwritten unless the screenshot is specifically for completion-state QA.
+- Confirm the screenshot does not show a real API key, private URL, personal account, real bookmark title, or private folder name.
+- Keep the change documentation-only unless the PR explicitly updates screenshot assets.
