@@ -99,6 +99,22 @@ Additional screenshots to capture before submission:
 
 Use [SAMPLE_DATA.md](SAMPLE_DATA.md), especially its editable preview and completion-state screenshot checklists, when capturing those screenshots.
 
+## Copy Consistency Checklist
+
+Before submitting or reusing Store-facing copy, confirm every public surface stays aligned with the same privacy and safety claims:
+
+- [ ] Original bookmarks are described as never moved, edited, or deleted.
+- [ ] Generated organization output is described as bookmark copies in a new folder, written only after user confirmation.
+- [ ] Lishu is described as having no Lishu account, backend, telemetry, or bundled API key.
+- [ ] Bookmark titles, URLs, and folder paths are described as going only to the LLM endpoint configured by the user during organization.
+- [ ] Copy does not imply bookmark data is routed through, stored by, or reviewed by a Lishu service.
+- [ ] Optional host access is tied only to the configured LLM endpoint origin, homepage meta scraping, or dead-link checks.
+- [ ] Homepage meta scraping and dead-link checks are described as opt-in actions.
+- [ ] Duplicate reports are described as local-only, and dead-link checks as read-only/report-only.
+- [ ] Screenshots use `docs/fixtures/sample-bookmarks.html` unless real data has been reviewed and redacted.
+- [ ] Screenshots and support materials do not show real API keys, private URLs, personal accounts, or private bookmark titles.
+- [ ] README, [PRIVACY.md](../PRIVACY.md), [LAUNCH.md](LAUNCH.md), and Store privacy answers use the same data-flow wording.
+
 ## Pre-Submit Checklist
 
 - [ ] `pnpm test`

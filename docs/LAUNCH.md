@@ -154,6 +154,7 @@ Lishu is a local-first Chrome bookmark organizer. It uses your own OpenAI-compat
 - [ ] Confirm the latest release zip matches README install instructions.
 - [ ] Confirm CI badge is green.
 - [ ] Confirm https://piklen.github.io/lishu/ returns HTTP 200.
+- [ ] Run the Store-facing copy consistency checklist in [STORE_LISTING.md](STORE_LISTING.md).
 - [ ] Confirm screenshots do not expose real API keys, private bookmarks, or personal account data.
 - [ ] Use `docs/fixtures/sample-bookmarks.html` for public screenshots unless a real screenshot has been reviewed and redacted.
 - [ ] Pick one primary feedback question before posting.
