@@ -78,6 +78,14 @@ Load the extension:
 5. Open Lishu from the toolbar, configure your LLM endpoint, API key, and model, then click **开始整理 / Start organizing**.
 6. Review the category preview, adjust category names if needed, then click **确认写入副本 / Confirm write copy**.
 
+Install troubleshooting:
+
+- If Chrome says the manifest is missing, check that the selected folder contains `manifest.json`.
+- For release installs, unzip `lishu-0.0.3.zip` first and select the unzipped folder, not the zip file.
+- For source builds, select `dist/`, not the repository root.
+- If Chrome does not show **Load unpacked**, enable **Developer mode** in `chrome://extensions`.
+- After rebuilding from source, click the extension card's reload button in `chrome://extensions`.
+
 ## LLM Configuration
 
 OpenAI-compatible example:
