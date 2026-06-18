@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppConfig, Progress } from '../types';
-import { runOrganize } from './pipeline';
+import { runOrganize, writePreviewedOrganize } from './pipeline';
 
 const config: AppConfig = {
   llm: {
@@ -101,5 +101,40 @@ describe('runOrganize', () => {
     );
     expect(bookmarks.remove).not.toHaveBeenCalled();
     expect(bookmarks.update).not.toHaveBeenCalled();
+  });
+
+  it('预览模式先停在分类预览,确认后才写入副本', async () => {
+    const progressEvents: Progress[] = [];
+    const preview = await runOrganize(
+      config,
+      (progress) => {
+        progressEvents.push({ ...progress });
+      },
+      null,
+      { previewBeforeWrite: true },
+    );
+    const bookmarks = chrome.bookmarks as typeof chrome.bookmarks & {
+      create: ReturnType<typeof vi.fn>;
+    };
+
+    expect(preview.status).toBe('preview');
+    expect(preview.total).toBe(2);
+    expect(preview.processed).toBe(2);
+    expect(preview.categories).toHaveLength(2);
+    expect(preview.classifications).toHaveLength(2);
+    expect(progressEvents.at(-1)?.status).toBe('preview');
+    expect(bookmarks.create).not.toHaveBeenCalled();
+
+    const writeEvents: Progress[] = [];
+    const done = await writePreviewedOrganize(preview, (progress) => {
+      writeEvents.push({ ...progress });
+    });
+
+    expect(writeEvents.map((progress) => progress.status)).toContain('writing');
+    expect(done.status).toBe('done');
+    expect(done.rootFolderId).toBeDefined();
+    expect(bookmarks.create).toHaveBeenCalledWith(
+      expect.objectContaining({ title: expect.stringContaining('理书整理') }),
+    );
   });
 });

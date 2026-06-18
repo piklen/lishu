@@ -55,6 +55,7 @@ export type RunStatus =
   | 'scanning'
   | 'categorizing'
   | 'classifying'
+  | 'preview'
   | 'writing'
   | 'done'
   | 'error';
@@ -74,6 +75,7 @@ export interface Progress {
 /** popup <-> background 消息协议 */
 export type Message =
   | { type: 'START' }
+  | { type: 'CONFIRM_WRITE' }
   | { type: 'GET_PROGRESS' }
   | { type: 'RESET_PROGRESS' }
   | { type: 'DELETE_LAST_OUTPUT' }

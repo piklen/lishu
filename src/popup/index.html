@@ -40,12 +40,14 @@
 
       <section class="card">
         <button id="start" class="btn-primary">开始整理</button>
+        <button id="confirmWrite" class="btn-primary btn-confirm" disabled>确认写入副本</button>
         <div class="actions-row">
           <button id="reset" class="btn-secondary" disabled>清除进度</button>
           <button id="deleteOutput" class="btn-danger" disabled>删除上次结果</button>
         </div>
         <div id="status" class="status">待命</div>
         <div class="bar"><div id="barFill" class="bar-fill"></div></div>
+        <div id="preview" class="preview" hidden></div>
         <p class="note">原书签不动。默认只授权 LLM endpoint;抓首页时才申请网页访问。</p>
       </section>
     </main>

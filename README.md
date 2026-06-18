@@ -13,6 +13,7 @@ AI-powered Chrome bookmark organizer. Lishu scans your bookmarks, asks your own 
 - **Non-destructive by design**: output is copied into a new `📚 理书整理 YYYY-MM-DD` folder.
 - **Bring your own LLM**: OpenAI-compatible Chat Completions and Anthropic Messages API are supported.
 - **Local-first**: no account, no backend, no bundled model key.
+- **Preview before writing**: review the category distribution before Lishu creates the output folder.
 - **Minimal default permissions**: by default it only asks for your LLM endpoint origin. Broad page access is requested only when you enable homepage meta scraping.
 - **Recoverable runs**: progress is saved in `chrome.storage.local`; the last generated output folder can be removed from the popup.
 
@@ -123,7 +124,6 @@ docs/                  PRD, architecture, roadmap
 
 ## Roadmap
 
-- [Preview categories before writing output](https://github.com/piklen/lishu/issues/4)
 - [Duplicate and dead-link detection mode](https://github.com/piklen/lishu/issues/7)
 - [Restore automatic CI after GitHub Actions billing is fixed](https://github.com/piklen/lishu/issues/8)
 - Chrome Web Store packaging
