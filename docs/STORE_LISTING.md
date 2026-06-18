@@ -87,6 +87,7 @@ Current repository assets:
 | Asset | Use |
 |---|---|
 | `docs/assets/popup.png` | Store screenshot candidate showing configuration, non-destructive actions, and bookmark health checks. |
+| `docs/assets/social-card.png` | Social preview image for launch posts and Open Graph sharing. |
 | `docs/assets/demo.gif` | GitHub README demo. Convert selected frames to static PNG/JPEG if the Store requires static screenshots. |
 
 Additional screenshots to capture before submission:
