@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "理书 lishu",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "用大模型自动整理 Chrome 书签栏 —— 非破坏式分类到新文件夹",
   "permissions": ["bookmarks", "storage"],
   "optional_host_permissions": ["<all_urls>"],

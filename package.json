@@ -1,6 +1,6 @@
 {
   "name": "lishu",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "AI-powered Chrome bookmark organizer that classifies bookmarks into a new folder without touching originals.",
   "type": "module",
   "license": "MIT",
