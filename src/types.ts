@@ -40,6 +40,12 @@ export interface Category {
   description: string;
 }
 
+/** 用户在预览阶段调整的分类名 */
+export interface CategoryRename {
+  from: string;
+  to: string;
+}
+
 /** Pass B 单条归类结果 */
 export interface Classification {
   bookmarkId: string;
@@ -110,7 +116,7 @@ export interface Progress {
 /** popup <-> background 消息协议 */
 export type Message =
   | { type: 'START' }
-  | { type: 'CONFIRM_WRITE' }
+  | { type: 'CONFIRM_WRITE'; categoryRenames?: CategoryRename[] }
   | { type: 'ANALYZE_BOOKMARKS' }
   | { type: 'CHECK_DEAD_LINKS' }
   | { type: 'GET_PROGRESS' }

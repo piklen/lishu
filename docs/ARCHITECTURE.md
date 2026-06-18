@@ -18,8 +18,8 @@
         │  每批后 core/storage.ts 写进度(service worker 被杀可续跑)
         │  chrome.runtime.sendMessage 把进度推回 popup
         ▼
-   popup 显示分类预览(每个分类的书签数量)
-        │  用户确认后 chrome.runtime.sendMessage({type:'CONFIRM_WRITE'})
+   popup 显示分类预览(每个分类的书签数量,可调整生成分类名)
+        │  用户确认后 chrome.runtime.sendMessage({type:'CONFIRM_WRITE',categoryRenames})
         ▼
    4. core/bookmarks.ts(非破坏写入)
         create「📚 理书整理 YYYY-MM-DD」顶层文件夹 → 按类建子夹 → create 书签副本
@@ -54,7 +54,7 @@
 
 **非破坏式(铁律)**:整理流程只 `chrome.bookmarks.create`,绝不 `remove`/`update` 原书签。popup 的“删除上次结果”只允许删除标题前缀为「📚 理书整理」的生成文件夹,用于清理本工具创建的输出。
 
-**写入前预览(信任闸门)**:分类完成后 progress 进入 `preview`,popup 只展示每个分类的数量,不创建任何书签。用户点“确认写入副本”后才进入 `writing` 并调用 `chrome.bookmarks.create`。这把高成本的 LLM 分类和高敏感的书签写入拆成两步,降低误操作风险。
+**写入前预览(信任闸门)**:分类完成后 progress 进入 `preview`,popup 展示每个分类的数量,并允许用户在写入前调整生成分类名,不创建任何书签。用户点“确认写入副本”后才进入 `writing`,由 `core/pipeline.ts` 校验空名/重复名并把分类与归类结果同步映射,最后调用 `chrome.bookmarks.create`。这把高成本的 LLM 分类和高敏感的书签写入拆成两步,降低误操作风险。
 
 **书签体检(只读报告)**:`core/health.ts` 只读取扁平化书签,重复 URL 检测完全本地完成;失效链接检测必须由用户在 popup 单独触发,先申请 `<all_urls>` 权限,再以 6 并发 / 8 秒超时检查 http(s) 链接。两类体检都只展示报告,不删除 / 移动 / 更新任何书签。
 

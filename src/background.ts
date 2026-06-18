@@ -1,5 +1,5 @@
 // service worker 入口 —— 接 popup 消息,编排整条整理管线
-import type { Message, Progress } from './types';
+import type { CategoryRename, Message, Progress } from './types';
 import { clearProgress, loadConfig, saveProgress, loadProgress } from './core/storage';
 import { runOrganize, writePreviewedOrganize } from './core/pipeline';
 import { getAllBookmarks, removeGeneratedFolder } from './core/bookmarks';
@@ -47,7 +47,7 @@ async function handleStart(): Promise<void> {
   }
 }
 
-async function handleConfirmWrite(): Promise<void> {
+async function handleConfirmWrite(categoryRenames: CategoryRename[] = []): Promise<void> {
   if (running) return;
   running = true;
   try {
@@ -57,7 +57,7 @@ async function handleConfirmWrite(): Promise<void> {
       lastProgress = p;
       await saveProgress(p);
       broadcast(p);
-    });
+    }, categoryRenames);
   } catch (e) {
     const error = e instanceof Error ? e.message : String(e);
     const base: Progress = lastProgress ?? {
@@ -118,7 +118,7 @@ chrome.runtime.onMessage.addListener((message: Message, _sender, sendResponse) =
     return undefined;
   }
   if (message.type === 'CONFIRM_WRITE') {
-    void handleConfirmWrite();
+    void handleConfirmWrite(message.categoryRenames ?? []);
     sendResponse({ ok: true });
     return undefined;
   }

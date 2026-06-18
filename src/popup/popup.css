@@ -137,6 +137,7 @@ button {
 .preview-header,
 .preview-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
   padding: 7px 8px;
@@ -150,6 +151,11 @@ button {
   border-bottom: 1px solid #d8dee4;
 }
 
+.preview-header span:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .preview-row {
   color: #1f2328;
   background: #fff;
@@ -161,10 +167,20 @@ button {
 }
 
 .preview-name {
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.preview-name-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 4px 6px;
+  font-size: 12px;
+  line-height: 1.25;
 }
 
 .preview-count {
