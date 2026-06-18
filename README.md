@@ -130,6 +130,14 @@ Yes. The popup can delete the last generated `📚 理书整理 ...` output fold
 
 Lishu has no server. Bookmark titles and URLs are sent directly from your browser to the LLM endpoint you configure.
 
+**Where is my API key stored?**
+
+API keys are stored in `chrome.storage.local`, not Chrome sync. Lishu does not bundle provider keys or proxy requests through a Lishu backend.
+
+**Can I use a local model?**
+
+Yes, if the local runtime exposes an OpenAI-compatible `/chat/completions` API. See [docs/PROVIDERS.md](docs/PROVIDERS.md) for Ollama-compatible and LM Studio examples, plus notes on local-model JSON quality.
+
 **Can I review the result before anything is written?**
 
 Yes. Lishu first shows a category-count preview where category names can be edited. It creates the generated output folder only after you confirm.
@@ -145,6 +153,10 @@ Only when you click **检查失效链接 / Check dead links** and grant page acc
 **Why does meta scraping request broad page access?**
 
 Chrome requires host permissions before an extension can fetch arbitrary website homepages. Lishu requests broad access only when you choose the homepage meta mode; the default mode only requests your LLM endpoint origin.
+
+**What should I remove before sharing screenshots or logs?**
+
+Do not share real API keys, private bookmark URLs, personal account names, or private bookmark titles. Use [docs/fixtures/sample-bookmarks.html](docs/fixtures/sample-bookmarks.html) for public screenshots unless real data has been reviewed and redacted.
 
 ## Development
 
