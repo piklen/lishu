@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-No changes yet.
+- Align PRD, launch copy, package metadata, and security policy with the current public release state.
 
 ## 0.0.3 - 2026-06-18
 

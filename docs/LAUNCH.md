@@ -35,7 +35,7 @@ Trust points:
 - Non-destructive: generated copies go into a separate folder.
 - Preview gate: classification finishes before any output folder is created, and category names can be adjusted before confirmation.
 - Health checks: duplicate URL reports are local-only; dead-link checks are opt-in and read-only.
-- Open-source: MIT license, CI, privacy policy, provider examples, and a good first issue.
+- Open-source: MIT license, CI, privacy policy, provider examples, issue templates, and contribution paths.
 
 ## Hacker News Draft
 
