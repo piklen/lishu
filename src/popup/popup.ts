@@ -2,6 +2,7 @@
 import type {
   AppConfig,
   BookmarkHealthReport,
+  CategoryQualityReport,
   CategoryRename,
   DeadLinkReport,
   DeadLinkResult,
@@ -12,7 +13,8 @@ import type {
   Progress,
   RunStatus,
 } from '../types';
-import { formatDeadLinkReport, formatDuplicateReport } from '../core/reportExport';
+import { formatCategoryQualityReport, formatDeadLinkReport, formatDuplicateReport } from '../core/reportExport';
+import { buildCategoryQualityReport } from '../core/quality';
 import { loadConfig, loadProgress, normalizeConfig, saveConfig } from '../core/storage';
 
 const STATUS_TEXT: Record<RunStatus, string> = {
@@ -49,6 +51,7 @@ const confirmWriteButton = mustGet<HTMLButtonElement>('confirmWrite');
 const analyzeBookmarksButton = mustGet<HTMLButtonElement>('analyzeBookmarks');
 const checkDeadLinksButton = mustGet<HTMLButtonElement>('checkDeadLinks');
 const copyHealthReportButton = mustGet<HTMLButtonElement>('copyHealthReport');
+const copyQualityReportButton = mustGet<HTMLButtonElement>('copyQualityReport');
 const resetButton = mustGet<HTMLButtonElement>('reset');
 const deleteOutputButton = mustGet<HTMLButtonElement>('deleteOutput');
 const statusEl = mustGet<HTMLDivElement>('status');
@@ -69,9 +72,13 @@ interface PreviewRow {
   name: string;
   count: number;
   editable: boolean;
+  averageConfidence: number | null;
+  lowConfidenceCount: number;
+  flags: string[];
 }
 
 let latestHealthReportText = '';
+let latestQualityReportText = '';
 
 function readForm(): AppConfig {
   return normalizeConfig({
@@ -123,12 +130,16 @@ function percentOf(progress: Progress | null): number {
   return 0;
 }
 
-function previewRows(progress: Progress): PreviewRow[] {
+function previewRows(progress: Progress, qualityReport: CategoryQualityReport): PreviewRow[] {
   const categoryNames = new Set(progress.categories.map((category) => category.name));
   const counts = new Map(progress.categories.map((category) => [category.name, 0]));
+  const qualityByName = new Map(qualityReport.categories.map((category) => [category.name, category]));
+  const seenBookmarkIds = new Set<string>();
   let otherCount = 0;
 
   for (const classification of progress.classifications) {
+    if (seenBookmarkIds.has(classification.bookmarkId)) continue;
+    seenBookmarkIds.add(classification.bookmarkId);
     if (categoryNames.has(classification.category)) {
       counts.set(classification.category, (counts.get(classification.category) ?? 0) + 1);
     } else {
@@ -136,7 +147,7 @@ function previewRows(progress: Progress): PreviewRow[] {
     }
   }
 
-  const unclassifiedCount = Math.max(0, progress.total - progress.classifications.length);
+  const unclassifiedCount = Math.max(0, progress.total - seenBookmarkIds.size);
   otherCount += unclassifiedCount;
   if (otherCount > 0 && categoryNames.has(OTHER_CATEGORY)) {
     counts.set(OTHER_CATEGORY, (counts.get(OTHER_CATEGORY) ?? 0) + otherCount);
@@ -146,18 +157,81 @@ function previewRows(progress: Progress): PreviewRow[] {
     name: category.name,
     count: counts.get(category.name) ?? 0,
     editable: true,
+    averageConfidence: qualityByName.get(category.name)?.averageConfidence ?? null,
+    lowConfidenceCount: qualityByName.get(category.name)?.lowConfidenceCount ?? 0,
+    flags: qualityByName.get(category.name)?.flags ?? [],
   }));
   if (otherCount > 0 && !categoryNames.has(OTHER_CATEGORY)) {
-    rows.push({ name: OTHER_CATEGORY, count: otherCount, editable: false });
+    rows.push({
+      name: OTHER_CATEGORY,
+      count: otherCount,
+      editable: false,
+      averageConfidence: null,
+      lowConfidenceCount: 0,
+      flags: ['需复查'],
+    });
   }
 
   return rows
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'));
 }
 
+function qualityLevelText(report: CategoryQualityReport): string {
+  if (report.level === 'good') return '稳定';
+  if (report.level === 'review') return '需复查';
+  return '风险高';
+}
+
+function formatPercent(value: number | null): string {
+  if (value === null) return '无';
+  return `${Math.round(value * 100)}%`;
+}
+
+function appendQualitySummary(parent: HTMLElement, report: CategoryQualityReport): void {
+  const summary = document.createElement('div');
+  summary.className = 'quality-summary';
+
+  const title = document.createElement('div');
+  title.className = 'quality-title';
+  const titleText = document.createElement('span');
+  titleText.textContent = '分类质量预检';
+  const score = document.createElement('span');
+  score.className = `quality-score ${report.level}`;
+  score.textContent = `${report.score}/100 · ${qualityLevelText(report)}`;
+  title.append(titleText, score);
+  summary.append(title);
+
+  const meta = document.createElement('div');
+  meta.className = 'quality-meta';
+  meta.textContent = `平均置信度 ${formatPercent(report.averageConfidence)} · 低置信度 ${report.lowConfidenceCount} · 需兜底 ${report.unknownCategoryCount + report.unclassifiedCount}`;
+  summary.append(meta);
+
+  for (const issue of report.issues.slice(0, 3)) {
+    const hint = document.createElement('div');
+    hint.className = `quality-hint ${issue.severity}`;
+    hint.textContent = issue.message;
+    summary.append(hint);
+  }
+
+  parent.append(summary);
+}
+
+function previewQualityText(preview: PreviewRow): string {
+  const parts = [`置信 ${formatPercent(preview.averageConfidence)}`];
+  if (preview.lowConfidenceCount > 0) parts.push(`${preview.lowConfidenceCount} 低置信度`);
+  if (preview.flags.length > 0) parts.push(preview.flags.join(' / '));
+  return parts.join(' · ');
+}
+
 function appendPreviewRow(parent: HTMLElement, preview: PreviewRow): void {
   const row = document.createElement('div');
-  row.className = preview.editable ? 'preview-row editable' : 'preview-row';
+  const isRisky = preview.flags.some((flag) => flag.includes('低置信度') || flag.includes('过大'));
+  row.className = [
+    'preview-row',
+    preview.editable ? 'editable' : '',
+    preview.flags.length > 0 ? 'flagged' : '',
+    isRisky ? 'risky' : '',
+  ].filter(Boolean).join(' ');
   let nameEl: HTMLElement;
   if (preview.editable) {
     const input = document.createElement('input');
@@ -176,7 +250,10 @@ function appendPreviewRow(parent: HTMLElement, preview: PreviewRow): void {
   const countEl = document.createElement('span');
   countEl.className = 'preview-count';
   countEl.textContent = String(preview.count);
-  row.append(nameEl, countEl);
+  const qualityEl = document.createElement('span');
+  qualityEl.className = 'preview-quality';
+  qualityEl.textContent = previewQualityText(preview);
+  row.append(nameEl, countEl, qualityEl);
   parent.append(row);
 }
 
@@ -184,8 +261,17 @@ function renderPreview(progress: Progress | null): void {
   previewEl.replaceChildren();
   if (progress?.status !== 'preview') {
     previewEl.hidden = true;
+    latestQualityReportText = '';
+    copyQualityReportButton.disabled = true;
+    copyQualityReportButton.hidden = true;
     return;
   }
+
+  const qualityReport = buildCategoryQualityReport(progress);
+  latestQualityReportText = formatCategoryQualityReport(qualityReport);
+  copyQualityReportButton.disabled = false;
+  copyQualityReportButton.hidden = false;
+  appendQualitySummary(previewEl, qualityReport);
 
   const header = document.createElement('div');
   header.className = 'preview-header';
@@ -196,7 +282,7 @@ function renderPreview(progress: Progress | null): void {
   header.append(nameHeader, countHeader);
   previewEl.append(header);
 
-  for (const row of previewRows(progress)) appendPreviewRow(previewEl, row);
+  for (const row of previewRows(progress, qualityReport)) appendPreviewRow(previewEl, row);
   previewEl.hidden = false;
 }
 
@@ -633,6 +719,20 @@ copyHealthReportButton.addEventListener('click', () => {
       healthStatusEl.classList.add('error');
       healthStatusEl.textContent = error instanceof Error ? error.message : String(error);
       updateCopyHealthReportButton();
+    });
+});
+
+copyQualityReportButton.addEventListener('click', () => {
+  if (!latestQualityReportText) return;
+  void copyTextToClipboard(latestQualityReportText)
+    .then(() => {
+      statusEl.classList.remove('error');
+      statusEl.classList.add('done');
+      statusEl.textContent = '分类质量报告已复制,公开粘贴前请先删私密书签';
+    })
+    .catch((error: unknown) => {
+      statusEl.classList.add('error');
+      statusEl.textContent = error instanceof Error ? error.message : String(error);
     });
 });
 

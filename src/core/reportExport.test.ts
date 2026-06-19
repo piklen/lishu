@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { BookmarkHealthReport, DeadLinkReport } from '../types';
-import { formatDeadLinkReport, formatDuplicateReport } from './reportExport';
+import type { BookmarkHealthReport, CategoryQualityReport, DeadLinkReport } from '../types';
+import { formatCategoryQualityReport, formatDeadLinkReport, formatDuplicateReport } from './reportExport';
 
 describe('health report export', () => {
   it('格式化完整重复书签报告', () => {
@@ -76,5 +76,37 @@ describe('health report export', () => {
 
     expect(duplicateText).toContain('未发现重复 URL。');
     expect(deadLinkText).toContain('未发现可能失效链接。');
+  });
+
+  it('格式化分类质量报告', () => {
+    const report: CategoryQualityReport = {
+      total: 10,
+      classifiedCount: 9,
+      score: 72,
+      level: 'review',
+      averageConfidence: 0.78,
+      lowConfidenceThreshold: 0.65,
+      lowConfidenceCount: 2,
+      unknownCategoryCount: 1,
+      unclassifiedCount: 1,
+      duplicateClassificationCount: 0,
+      issues: [{ severity: 'warning', message: '2 个书签置信度偏低。' }],
+      categories: [
+        {
+          name: '工程',
+          count: 7,
+          share: 0.7,
+          averageConfidence: 0.81,
+          lowConfidenceCount: 1,
+          flags: ['过大分类', '含低置信度'],
+        },
+      ],
+    };
+
+    const text = formatCategoryQualityReport(report);
+    expect(text).toContain('# 理书分类质量报告');
+    expect(text).toContain('质量分: 72/100 (需要复查)');
+    expect(text).toContain('- [warning] 2 个书签置信度偏低。');
+    expect(text).toContain('提示: 过大分类 / 含低置信度');
   });
 });

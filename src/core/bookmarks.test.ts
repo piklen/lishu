@@ -64,6 +64,18 @@ describe('bucketByCategory', () => {
     expect(buckets.get('开发工具')).toEqual([bookmarks[0]]);
     expect(buckets.get('其他')).toEqual([bookmarks[1], bookmarks[2]]);
   });
+
+  it('重复 bookmarkId 只采用第一条分类,避免写入重复副本', () => {
+    const classifications: Classification[] = [
+      { bookmarkId: 'a', category: '开发工具', confidence: 0.9 },
+      { bookmarkId: 'a', category: '不存在的类目', confidence: 0.2 },
+    ];
+
+    const buckets = bucketByCategory(bookmarks, categories, classifications);
+
+    expect(buckets.get('开发工具')).toEqual([bookmarks[0]]);
+    expect(buckets.get('其他')).toEqual([bookmarks[1], bookmarks[2]]);
+  });
 });
 
 describe('writeOrganized', () => {

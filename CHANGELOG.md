@@ -4,6 +4,7 @@
 
 - Run extension packaging in CI so release zip generation is verified on pull requests and main.
 - Align PRD, launch copy, package metadata, and security policy with the current public release state.
+- Add a write-before-preview category quality score with low-confidence, coverage, duplicate-result, and suspicious-category review hints.
 
 ## 0.0.3 - 2026-06-18
 
