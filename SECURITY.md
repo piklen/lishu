@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Lishu has not published a stable release yet. Security fixes are accepted on `main`.
+Lishu is pre-1.0. Security fixes are accepted for the latest published release and `main`.
 
 ## Reporting A Vulnerability
 
