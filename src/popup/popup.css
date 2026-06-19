@@ -72,6 +72,10 @@ button {
   margin-top: 8px;
 }
 
+.demo-button {
+  margin-top: 8px;
+}
+
 .btn-secondary {
   background: #f3f4f6;
   color: #1f2328;
