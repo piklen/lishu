@@ -12,6 +12,7 @@ import type {
   Progress,
   RunStatus,
 } from '../types';
+import { formatDeadLinkReport, formatDuplicateReport } from '../core/reportExport';
 import { loadConfig, loadProgress, normalizeConfig, saveConfig } from '../core/storage';
 
 const STATUS_TEXT: Record<RunStatus, string> = {
@@ -47,6 +48,7 @@ const startButton = mustGet<HTMLButtonElement>('start');
 const confirmWriteButton = mustGet<HTMLButtonElement>('confirmWrite');
 const analyzeBookmarksButton = mustGet<HTMLButtonElement>('analyzeBookmarks');
 const checkDeadLinksButton = mustGet<HTMLButtonElement>('checkDeadLinks');
+const copyHealthReportButton = mustGet<HTMLButtonElement>('copyHealthReport');
 const resetButton = mustGet<HTMLButtonElement>('reset');
 const deleteOutputButton = mustGet<HTMLButtonElement>('deleteOutput');
 const statusEl = mustGet<HTMLDivElement>('status');
@@ -68,6 +70,8 @@ interface PreviewRow {
   count: number;
   editable: boolean;
 }
+
+let latestHealthReportText = '';
 
 function readForm(): AppConfig {
   return normalizeConfig({
@@ -321,6 +325,10 @@ function renderDeadLinkReport(report: DeadLinkReport): void {
   }
 }
 
+function updateCopyHealthReportButton(): void {
+  copyHealthReportButton.disabled = latestHealthReportText.length === 0;
+}
+
 function renderProgress(progress: Progress | null): void {
   statusEl.classList.remove('error', 'done');
   const hasSavedProgress = !!progress && progress.status !== 'idle';
@@ -479,6 +487,25 @@ function sendCheckDeadLinks(): Promise<DeadLinkReport> {
 function setHealthButtonsDisabled(disabled: boolean): void {
   analyzeBookmarksButton.disabled = disabled;
   checkDeadLinksButton.disabled = disabled;
+  copyHealthReportButton.disabled = disabled || latestHealthReportText.length === 0;
+}
+
+async function copyTextToClipboard(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', 'true');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.append(textarea);
+  textarea.select();
+  const copied = document.execCommand('copy');
+  textarea.remove();
+  if (!copied) throw new Error('复制失败,请手动选择报告内容');
 }
 
 async function saveCurrentConfig(): Promise<AppConfig> {
@@ -540,18 +567,21 @@ confirmWriteButton.addEventListener('click', () => {
 
 analyzeBookmarksButton.addEventListener('click', () => {
   setHealthButtonsDisabled(true);
+  latestHealthReportText = '';
   healthReportEl.hidden = true;
   healthReportEl.replaceChildren();
   healthStatusEl.classList.remove('error', 'done');
   healthStatusEl.textContent = '正在检查重复书签';
   void sendAnalyzeBookmarks()
     .then((report) => {
+      latestHealthReportText = formatDuplicateReport(report);
       healthStatusEl.classList.add('done');
       healthStatusEl.textContent =
         report.duplicateGroups.length === 0
           ? '未发现重复 URL'
           : `发现 ${report.duplicateGroups.length} 组重复 URL`;
       renderHealthReport(report);
+      updateCopyHealthReportButton();
     })
     .catch((error: unknown) => {
       healthStatusEl.classList.add('error');
@@ -564,6 +594,7 @@ analyzeBookmarksButton.addEventListener('click', () => {
 
 checkDeadLinksButton.addEventListener('click', () => {
   setHealthButtonsDisabled(true);
+  latestHealthReportText = '';
   healthReportEl.hidden = true;
   healthReportEl.replaceChildren();
   healthStatusEl.classList.remove('error', 'done');
@@ -574,10 +605,12 @@ checkDeadLinksButton.addEventListener('click', () => {
       return sendCheckDeadLinks();
     })
     .then((report) => {
+      latestHealthReportText = formatDeadLinkReport(report);
       healthStatusEl.classList.add('done');
       healthStatusEl.textContent =
         report.deadLinks.length === 0 ? '未发现可能失效链接' : `发现 ${report.deadLinks.length} 条需复查链接`;
       renderDeadLinkReport(report);
+      updateCopyHealthReportButton();
     })
     .catch((error: unknown) => {
       healthStatusEl.classList.add('error');
@@ -585,6 +618,21 @@ checkDeadLinksButton.addEventListener('click', () => {
     })
     .finally(() => {
       setHealthButtonsDisabled(false);
+    });
+});
+
+copyHealthReportButton.addEventListener('click', () => {
+  if (!latestHealthReportText) return;
+  void copyTextToClipboard(latestHealthReportText)
+    .then(() => {
+      healthStatusEl.classList.remove('error');
+      healthStatusEl.classList.add('done');
+      healthStatusEl.textContent = '报告已复制,公开粘贴前请先删私密书签';
+    })
+    .catch((error: unknown) => {
+      healthStatusEl.classList.add('error');
+      healthStatusEl.textContent = error instanceof Error ? error.message : String(error);
+      updateCopyHealthReportButton();
     });
 });
 
