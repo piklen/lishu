@@ -55,6 +55,41 @@ export interface Classification {
   confidence: number;
 }
 
+/** 分类质量等级 */
+export type CategoryQualityLevel = 'good' | 'review' | 'poor';
+
+/** 分类质量问题严重度 */
+export type CategoryQualitySeverity = 'info' | 'warning' | 'danger';
+
+/** 单个分类的质量统计 */
+export interface CategoryQualityCategory {
+  name: string;
+  count: number;
+  share: number;
+  averageConfidence: number | null;
+  lowConfidenceCount: number;
+  flags: string[];
+}
+
+/** 写入前分类质量摘要 */
+export interface CategoryQualityReport {
+  total: number;
+  classifiedCount: number;
+  score: number;
+  level: CategoryQualityLevel;
+  averageConfidence: number | null;
+  lowConfidenceThreshold: number;
+  lowConfidenceCount: number;
+  unknownCategoryCount: number;
+  unclassifiedCount: number;
+  duplicateClassificationCount: number;
+  categories: CategoryQualityCategory[];
+  issues: Array<{
+    severity: CategoryQualitySeverity;
+    message: string;
+  }>;
+}
+
 /** 重复书签组(只读报告,不修改原书签) */
 export interface DuplicateGroup {
   normalizedUrl: string;

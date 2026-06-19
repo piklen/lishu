@@ -1,4 +1,13 @@
-import type { BookmarkHealthReport, DeadLinkReport, DeadLinkResult, DuplicateGroup, FlatBookmark } from '../types';
+import type {
+  BookmarkHealthReport,
+  CategoryQualityCategory,
+  CategoryQualityLevel,
+  CategoryQualityReport,
+  DeadLinkReport,
+  DeadLinkResult,
+  DuplicateGroup,
+  FlatBookmark,
+} from '../types';
 
 function bookmarkTitle(bookmark: FlatBookmark): string {
   return bookmark.title.trim() || '(无标题)';
@@ -77,5 +86,51 @@ export function formatDeadLinkReport(report: DeadLinkReport): string {
   }
 
   lines.push(report.deadLinks.map((result, index) => formatDeadLink(result, index + 1)).join('\n\n'));
+  return lines.join('\n');
+}
+
+function qualityLevelText(level: CategoryQualityLevel): string {
+  if (level === 'good') return '稳定';
+  if (level === 'review') return '需要复查';
+  return '风险较高';
+}
+
+function formatPercent(value: number | null): string {
+  if (value === null) return '无';
+  return `${Math.round(value * 100)}%`;
+}
+
+function formatQualityCategory(category: CategoryQualityCategory, index: number): string {
+  const lines = [
+    `## ${index}. ${category.name}`,
+    `书签数: ${category.count}`,
+    `占比: ${formatPercent(category.share)}`,
+    `平均置信度: ${formatPercent(category.averageConfidence)}`,
+    `低置信度: ${category.lowConfidenceCount}`,
+  ];
+  if (category.flags.length > 0) lines.push(`提示: ${category.flags.join(' / ')}`);
+  return lines.join('\n');
+}
+
+export function formatCategoryQualityReport(report: CategoryQualityReport): string {
+  const lines = [
+    '# 理书分类质量报告',
+    `质量分: ${report.score}/100 (${qualityLevelText(report.level)})`,
+    `总书签: ${report.total}`,
+    `已分类: ${report.classifiedCount}`,
+    `平均置信度: ${formatPercent(report.averageConfidence)}`,
+    `低置信度阈值: ${formatPercent(report.lowConfidenceThreshold)}`,
+    `低置信度书签: ${report.lowConfidenceCount}`,
+    `未知分类: ${report.unknownCategoryCount}`,
+    `漏分类: ${report.unclassifiedCount}`,
+    `重复分类结果: ${report.duplicateClassificationCount}`,
+    '',
+    '## 复查提示',
+    ...report.issues.map((issue) => `- [${issue.severity}] ${issue.message}`),
+    '',
+    '## 分类明细',
+    report.categories.map((category, index) => formatQualityCategory(category, index + 1)).join('\n\n'),
+  ];
+
   return lines.join('\n');
 }

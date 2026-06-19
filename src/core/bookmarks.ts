@@ -37,6 +37,7 @@ export function bucketByCategory(
   buckets.set(OTHER, []);
   const classified = new Set<string>();
   for (const cls of classifications) {
+    if (classified.has(cls.bookmarkId)) continue;
     const b = byId.get(cls.bookmarkId);
     if (!b) continue;
     (buckets.get(cls.category) ?? buckets.get(OTHER)!).push(b);

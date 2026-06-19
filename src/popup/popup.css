@@ -68,6 +68,10 @@ button {
   margin-top: 8px;
 }
 
+.quality-copy {
+  margin-top: 8px;
+}
+
 .btn-secondary {
   background: #f3f4f6;
   color: #1f2328;
@@ -136,9 +140,8 @@ button {
 
 .preview-header,
 .preview-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
   padding: 7px 8px;
   font-size: 12px;
@@ -160,6 +163,14 @@ button {
   color: #1f2328;
   background: #fff;
   border-top: 1px solid #eaeef2;
+}
+
+.preview-row.flagged {
+  background: #fffbeb;
+}
+
+.preview-row.risky {
+  background: #fff7f5;
 }
 
 .preview-row:first-of-type {
@@ -187,6 +198,69 @@ button {
   flex: 0 0 auto;
   color: #656d76;
   font-weight: 600;
+}
+
+.preview-quality {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #656d76;
+  font-size: 11px;
+}
+
+.quality-summary {
+  padding: 8px;
+  background: #fff;
+  border-bottom: 1px solid #d8dee4;
+}
+
+.quality-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.quality-score {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 11px;
+}
+
+.quality-score.good {
+  color: #116329;
+  background: #dafbe1;
+}
+
+.quality-score.review {
+  color: #9a6700;
+  background: #fff8c5;
+}
+
+.quality-score.poor {
+  color: #b42318;
+  background: #ffebe9;
+}
+
+.quality-meta,
+.quality-hint {
+  margin-top: 5px;
+  color: #656d76;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.quality-hint.warning {
+  color: #9a6700;
+}
+
+.quality-hint.danger {
+  color: #b42318;
 }
 
 .health-report {
