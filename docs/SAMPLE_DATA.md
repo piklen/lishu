@@ -6,6 +6,8 @@ Use this synthetic fixture when preparing public screenshots, docs, launch posts
 
 The fixture contains 36 fake bookmarks across Engineering, AI Providers, Design And Product, Finance Learning, Reading And Reference, and Tools And Utilities. It intentionally includes one repeated URL so the local duplicate report has something safe to detect.
 
+The popup also includes **体验示例预览 / Try demo preview**. That built-in demo uses synthetic in-app progress data, not this import fixture. Use the built-in demo when you only need to show the preview and quality score without importing bookmarks or configuring an API key; use the HTML fixture when you need Chrome bookmark-manager screenshots or end-to-end manual QA.
+
 ## Privacy Rules
 
 - Do not use a real Chrome bookmark export for public screenshots.
@@ -17,6 +19,13 @@ The fixture contains 36 fake bookmarks across Engineering, AI Providers, Design 
 ## Manual QA Flow
 
 Use an isolated Chrome profile so the sample import does not mix with personal bookmarks.
+
+Fast no-data check:
+
+1. Build Lishu with `pnpm build`.
+2. Load `dist/` through `chrome://extensions`.
+3. Open the popup and click **体验示例预览 / Try demo preview**.
+4. Confirm the preview shows a quality score, editable categories, disabled write action, and **复制质量报告 / Copy quality report**.
 
 1. Open Chrome's bookmark manager.
 2. Choose **Import bookmarks**.

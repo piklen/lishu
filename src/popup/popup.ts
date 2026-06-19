@@ -13,6 +13,7 @@ import type {
   Progress,
   RunStatus,
 } from '../types';
+import { buildDemoProgress } from '../core/demo';
 import { formatCategoryQualityReport, formatDeadLinkReport, formatDuplicateReport } from '../core/reportExport';
 import { buildCategoryQualityReport } from '../core/quality';
 import { loadConfig, loadProgress, normalizeConfig, saveConfig } from '../core/storage';
@@ -46,6 +47,7 @@ const protocolSelect = mustGet<HTMLSelectElement>('protocol');
 const enrichModeSelect = mustGet<HTMLSelectElement>('enrichMode');
 const batchSizeInput = mustGet<HTMLInputElement>('batchSize');
 const saveButton = mustGet<HTMLButtonElement>('save');
+const demoPreviewButton = mustGet<HTMLButtonElement>('demoPreview');
 const startButton = mustGet<HTMLButtonElement>('start');
 const confirmWriteButton = mustGet<HTMLButtonElement>('confirmWrite');
 const analyzeBookmarksButton = mustGet<HTMLButtonElement>('analyzeBookmarks');
@@ -79,6 +81,7 @@ interface PreviewRow {
 
 let latestHealthReportText = '';
 let latestQualityReportText = '';
+let demoPreviewActive = false;
 
 function readForm(): AppConfig {
   return normalizeConfig({
@@ -420,11 +423,14 @@ function renderProgress(progress: Progress | null): void {
   const hasSavedProgress = !!progress && progress.status !== 'idle';
   const running = isRunning(progress);
   const previewReady = progress?.status === 'preview';
+  const demoPreview = previewReady && demoPreviewActive;
   startButton.disabled = running;
-  startButton.textContent = previewReady ? '重新生成预览' : progress?.status === 'done' ? '重新整理' : '开始整理';
-  confirmWriteButton.disabled = !previewReady || running;
-  resetButton.disabled = !hasSavedProgress || running;
-  deleteOutputButton.disabled = !progress?.rootFolderId || running;
+  startButton.textContent = demoPreview ? '开始真实整理' : previewReady ? '重新生成预览' : progress?.status === 'done' ? '重新整理' : '开始整理';
+  confirmWriteButton.disabled = demoPreview || !previewReady || running;
+  confirmWriteButton.textContent = demoPreview ? '示例不写入' : '确认写入副本';
+  resetButton.disabled = (!hasSavedProgress && !demoPreview) || running;
+  resetButton.textContent = demoPreview ? '退出示例' : '清除进度';
+  deleteOutputButton.disabled = demoPreview || !progress?.rootFolderId || running;
   barFill.style.width = `${percentOf(progress)}%`;
   renderPreview(progress);
 
@@ -441,7 +447,9 @@ function renderProgress(progress: Progress | null): void {
 
   if (progress.status === 'preview') {
     const categoryCount = progress.categories.length;
-    statusEl.textContent = `预览就绪: ${progress.total} 个书签 / ${categoryCount} 个分类,可调整分类名后写入副本`;
+    statusEl.textContent = demoPreview
+      ? `示例预览: ${progress.total} 个合成书签 / ${categoryCount} 个分类,不会写入浏览器`
+      : `预览就绪: ${progress.total} 个书签 / ${categoryCount} 个分类,可调整分类名后写入副本`;
     return;
   }
 
@@ -614,6 +622,12 @@ saveButton.addEventListener('click', () => {
 
 protocolSelect.addEventListener('change', updateProtocolHints);
 
+demoPreviewButton.addEventListener('click', () => {
+  demoPreviewActive = true;
+  statusEl.classList.remove('error', 'done');
+  renderProgress(buildDemoProgress());
+});
+
 startButton.addEventListener('click', () => {
   void (async () => {
     const config = readForm();
@@ -622,6 +636,7 @@ startButton.addEventListener('click', () => {
     }
     await ensureHostPermissions(config);
     await saveConfig(config);
+    demoPreviewActive = false;
     renderProgress({
       status: 'scanning',
       total: 0,
@@ -737,6 +752,11 @@ copyQualityReportButton.addEventListener('click', () => {
 });
 
 resetButton.addEventListener('click', () => {
+  if (demoPreviewActive) {
+    demoPreviewActive = false;
+    void loadProgress().then((progress) => renderProgress(progress));
+    return;
+  }
   void sendAction('RESET_PROGRESS')
     .then((progress) => renderProgress(progress))
     .catch((error: unknown) => {
@@ -755,7 +775,10 @@ deleteOutputButton.addEventListener('click', () => {
 });
 
 chrome.runtime.onMessage.addListener((message: Message) => {
-  if (message.type === 'PROGRESS') renderProgress(message.progress);
+  if (message.type === 'PROGRESS') {
+    demoPreviewActive = false;
+    renderProgress(message.progress);
+  }
 });
 
 void (async () => {

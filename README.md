@@ -21,6 +21,7 @@ Lishu is for people who have years of saved Chrome bookmarks but do not want a b
 4. Shows a category-count preview with a quality score, low-confidence warnings, and editable category names.
 5. Creates a separate output folder only after you confirm.
 6. Runs local duplicate reports and opt-in dead-link checks when you want a cleanup pass.
+7. Lets you open a synthetic demo preview before entering an API key or touching real bookmarks.
 
 The original bookmark tree stays where it is, so you can compare the generated result, delete it, or run Lishu again with different settings.
 
@@ -30,6 +31,7 @@ The original bookmark tree stays where it is, so you can compare the generated r
 - **Bring your own LLM**: OpenAI-compatible Chat Completions and Anthropic Messages API are supported.
 - **Local-first**: no account, no backend, no bundled model key.
 - **Preview before writing**: review category counts, quality score, and low-confidence warnings before Lishu creates the output folder.
+- **Demo before setup**: open a built-in synthetic preview without an API key, LLM call, or bookmark access.
 - **Bookmark health checks**: detect repeated URLs locally, and check possible dead links only when you explicitly request network access.
 - **Minimal default permissions**: by default it only asks for your LLM endpoint origin. Broad page access is requested only when you enable homepage meta scraping.
 - **Recoverable runs**: progress is saved in `chrome.storage.local`; the last generated output folder can be removed from the popup.
@@ -98,8 +100,9 @@ Load the extension:
 2. Enable **Developer mode**.
 3. Click **Load unpacked**.
 4. Select the generated `dist/` directory.
-5. Open Lishu from the toolbar, configure your LLM endpoint, API key, and model, then click **开始整理 / Start organizing**.
-6. Review the quality score, category preview, and low-confidence warnings, adjust category names if needed, then click **确认写入副本 / Confirm write copy**.
+5. Open Lishu from the toolbar and click **体验示例预览 / Try demo preview** if you want to see the workflow before setup.
+6. Configure your LLM endpoint, API key, and model, then click **开始整理 / Start organizing**.
+7. Review the quality score, category preview, and low-confidence warnings, adjust category names if needed, then click **确认写入副本 / Confirm write copy**.
 
 Install troubleshooting:
 
@@ -173,6 +176,10 @@ Yes, if the local runtime exposes an OpenAI-compatible `/chat/completions` API. 
 **Can I review the result before anything is written?**
 
 Yes. Lishu first shows a category-count preview with a quality score, review hints, and editable category names. It creates the generated output folder only after you confirm.
+
+**Can I try Lishu without an API key or real bookmarks?**
+
+Yes. The popup has a synthetic demo preview. It does not read Chrome bookmarks, call an LLM, save progress, or write an output folder.
 
 **Can Lishu delete duplicate bookmarks for me?**
 
