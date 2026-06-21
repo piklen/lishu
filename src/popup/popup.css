@@ -18,6 +18,26 @@ h2 {
   color: #656d76;
 }
 
+.toast {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #dafbe1;
+  color: #116329;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  box-shadow: 0 6px 18px rgb(31 35 40 / 14%);
+}
+
+.toast.error {
+  background: #ffebe9;
+  color: #b42318;
+}
+
 .card {
   border: 1px solid #e1e4e8;
   border-radius: 8px;
@@ -42,6 +62,20 @@ select {
   font-size: 13px;
   border: 1px solid #d0d7de;
   border-radius: 6px;
+}
+
+input.invalid,
+select.invalid {
+  border-color: #b42318;
+  background: #fff7f5;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #656d76;
 }
 
 button {
@@ -81,6 +115,11 @@ button {
   color: #1f2328;
 }
 
+.btn-secondary.saved {
+  background: #dafbe1;
+  color: #116329;
+}
+
 .btn-danger {
   background: #fff1f0;
   color: #b42318;
@@ -100,6 +139,131 @@ button {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-top: 8px;
+}
+
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  margin-bottom: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f6f8fa;
+  color: #656d76;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.config-status,
+.model-health,
+.progress-resume {
+  margin-top: 8px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  background: #f6f8fa;
+  color: #656d76;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.model-health {
+  margin: -1px 0 7px;
+}
+
+.config-status.saved {
+  background: #dafbe1;
+  color: #116329;
+}
+
+.model-health.ok {
+  background: #dafbe1;
+  color: #116329;
+}
+
+.model-health.checking,
+.model-health.pending {
+  background: #ddf4ff;
+  color: #0969da;
+}
+
+.config-status.error {
+  background: #ffebe9;
+  color: #b42318;
+}
+
+.model-health.error {
+  background: #ffebe9;
+  color: #b42318;
+}
+
+.progress-resume {
+  margin: 0 0 8px;
+  background: #ddf4ff;
+  color: #0969da;
+  font-weight: 700;
+}
+
+.progress-resume.ready {
+  background: #dafbe1;
+  color: #116329;
+}
+
+.progress-resume.error {
+  background: #ffebe9;
+  color: #b42318;
+}
+
+.mode-badge.demo {
+  background: #fff8c5;
+  color: #9a6700;
+}
+
+.mode-badge.running {
+  background: #ddf4ff;
+  color: #0969da;
+}
+
+.mode-badge.paused {
+  background: #fff8c5;
+  color: #9a6700;
+}
+
+.mode-badge.preview {
+  background: #dafbe1;
+  color: #116329;
+}
+
+.preflight {
+  margin-bottom: 8px;
+  padding: 8px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1f2328;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.preflight-title {
+  margin-bottom: 5px;
+  font-weight: 700;
+}
+
+.preflight-grid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 8px;
+}
+
+.preflight-grid dt {
+  color: #656d76;
+}
+
+.preflight-grid dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
 }
 
 .status {
@@ -135,7 +299,7 @@ button {
 
 .preview {
   margin-top: 10px;
-  max-height: 150px;
+  max-height: 260px;
   overflow: auto;
   border: 1px solid #d0d7de;
   border-radius: 8px;
@@ -257,6 +421,59 @@ button {
   color: #656d76;
   font-size: 11px;
   line-height: 1.35;
+}
+
+.review-panel {
+  padding: 8px;
+  background: #fff;
+  border-bottom: 1px solid #d8dee4;
+}
+
+.review-panel summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.review-note {
+  margin-top: 5px;
+  color: #656d76;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.review-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 5px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eaeef2;
+}
+
+.review-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2328;
+}
+
+.review-meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #656d76;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.review-category-select {
+  margin-top: 0;
+  font-size: 12px;
 }
 
 .quality-hint.warning {

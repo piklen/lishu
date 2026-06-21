@@ -132,7 +132,7 @@ export function buildCategoryQualityReport(input: QualityInput): CategoryQuality
   const lowConfidenceRate = classifiedCount > 0 ? lowConfidenceCount / classifiedCount : 0;
   const coverageProblemRate = total > 0 ? (unknownCategoryCount + unclassifiedCount) / total : 0;
 
-  const score = Math.max(
+  const rawScore = Math.max(
     0,
     Math.min(
       100,
@@ -147,6 +147,7 @@ export function buildCategoryQualityReport(input: QualityInput): CategoryQuality
       ),
     ),
   );
+  const score = lowConfidenceCount > 0 ? Math.min(99, rawScore) : rawScore;
 
   const issues: CategoryQualityReport['issues'] = [];
   if (total === 0) {

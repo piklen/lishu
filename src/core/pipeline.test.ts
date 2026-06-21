@@ -11,6 +11,8 @@ const config: AppConfig = {
   },
   enrichMode: 'world-knowledge',
   batchSize: 10,
+  hierarchyMode: 'auto',
+  hierarchyThreshold: 30,
 };
 
 function mockChatResponse(content: unknown) {
@@ -90,6 +92,15 @@ describe('runOrganize', () => {
     expect(result.categories).toHaveLength(2);
     expect(result.classifications).toHaveLength(2);
     expect(progressEvents.at(-1)?.status).toBe('done');
+    expect(progressEvents.some((progress) => progress.runMeta?.lastEvent === '正在请求第 1/1 批')).toBe(true);
+    expect(
+      progressEvents.some(
+        (progress) =>
+          progress.status === 'classifying' &&
+          progress.runMeta?.lastEvent === '已完成第 1/1 批' &&
+          progress.classifications.length === 2,
+      ),
+    ).toBe(true);
     expect(bookmarks.create).toHaveBeenCalledWith(
       expect.objectContaining({ title: expect.stringContaining('理书整理') }),
     );
@@ -128,7 +139,7 @@ describe('runOrganize', () => {
     const writeEvents: Progress[] = [];
     const done = await writePreviewedOrganize(preview, (progress) => {
       writeEvents.push({ ...progress });
-    });
+    }, config);
 
     expect(writeEvents.map((progress) => progress.status)).toContain('writing');
     expect(done.status).toBe('done');
@@ -144,7 +155,7 @@ describe('runOrganize', () => {
       create: ReturnType<typeof vi.fn>;
     };
 
-    const done = await writePreviewedOrganize(preview, () => {}, [
+    const done = await writePreviewedOrganize(preview, () => {}, config, [
       { from: '开发工具', to: 'Engineering' },
       { from: 'AI 工具', to: 'AI References' },
     ]);
@@ -170,8 +181,25 @@ describe('runOrganize', () => {
     };
 
     await expect(
-      writePreviewedOrganize(preview, () => {}, [{ from: '开发工具', to: 'AI 工具' }]),
+      writePreviewedOrganize(preview, () => {}, config, [{ from: '开发工具', to: 'AI 工具' }]),
     ).rejects.toThrow('分类名不能重复: AI 工具');
     expect(bookmarks.create).not.toHaveBeenCalled();
+  });
+
+  it('确认写入时应用单个书签的复查分类调整', async () => {
+    const preview = await runOrganize(config, () => {}, null, { previewBeforeWrite: true });
+    const bookmarks = chrome.bookmarks as typeof chrome.bookmarks & {
+      create: ReturnType<typeof vi.fn>;
+    };
+
+    const done = await writePreviewedOrganize(preview, () => {}, config, [], [
+      { bookmarkId: '3', category: '开发工具' },
+    ]);
+    const createdTitles = bookmarks.create.mock.calls.map(
+      ([details]) => (details as chrome.bookmarks.CreateDetails).title,
+    );
+
+    expect(done.classifications.find((classification) => classification.bookmarkId === '3')?.category).toBe('开发工具');
+    expect(createdTitles).toContain('开发工具');
   });
 });

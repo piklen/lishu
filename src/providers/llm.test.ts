@@ -60,6 +60,62 @@ describe('parseJsonFromLlm', () => {
 });
 
 describe('llmProvider', () => {
+  it('模型探活只发送最小 ping 请求', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      json: async () => ({
+        choices: [{ message: { content: 'OK' } }],
+      }),
+      text: async () => '',
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await llmProvider.checkModel({
+      protocol: 'openai-compatible',
+      endpoint: 'https://api.example.com/v1',
+      apiKey: 'test-key',
+      model: 'health-model',
+    });
+
+    const calls = fetchMock.mock.calls as unknown as Array<[string, RequestInit]>;
+    const body = JSON.parse(String(calls[0]?.[1].body)) as {
+      max_tokens?: number;
+      messages: Array<{ content: string }>;
+      model: string;
+    };
+    expect(body.model).toBe('health-model');
+    expect(body.max_tokens).toBe(8);
+    expect(JSON.stringify(body.messages)).toContain('ping');
+    expect(JSON.stringify(body.messages)).not.toContain('https://');
+    expect(JSON.stringify(body.messages)).not.toContain('书签');
+  });
+
+  it('模型探活使用短超时而不是等待完整分类超时', async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchMock = vi.fn((_url: string, init: RequestInit) => new Promise<Response>((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => {
+          reject(new DOMException('Aborted', 'AbortError'));
+        });
+      }));
+      vi.stubGlobal('fetch', fetchMock);
+
+      const promise = llmProvider.checkModel({
+        protocol: 'openai-compatible',
+        endpoint: 'https://api.example.com/v1',
+        apiKey: 'test-key',
+        model: 'slow-model',
+      });
+      const assertion = expect(promise).rejects.toThrow('12 秒内没有响应');
+      await vi.advanceTimersByTimeAsync(12_000);
+      await assertion;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('按 Anthropic Messages API 协议发送请求并读取文本块', async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
@@ -80,6 +136,7 @@ describe('llmProvider', () => {
         apiKey: 'test-key',
         model: 'claude-test',
       },
+      { hierarchyThreshold: 30 },
     );
 
     expect(result).toEqual([{ name: 'AI', description: '人工智能' }]);
@@ -93,5 +150,63 @@ describe('llmProvider', () => {
         }),
       }),
     );
+    const calls = fetchMock.mock.calls as unknown as Array<[string, RequestInit]>;
+    const init = calls[0]?.[1];
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+    expect(JSON.stringify(init)).toContain('超过 30 个精细分类');
+  });
+
+  it('LLM 长时间不响应时返回明确超时错误', async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchMock = vi.fn((_url: string, init: RequestInit) => new Promise<Response>((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => {
+          reject(new DOMException('Aborted', 'AbortError'));
+        });
+      }));
+      vi.stubGlobal('fetch', fetchMock);
+
+      const promise = llmProvider.classifyBatch(
+        [{ id: '1', title: 'Slow API', url: 'https://slow.example/' }],
+        [{ name: '工具', description: '工具站点' }],
+        {
+          protocol: 'openai-compatible',
+          endpoint: 'https://api.example.com/v1',
+          apiKey: 'test-key',
+          model: 'slow-model',
+        },
+      );
+      const assertion = expect(promise).rejects.toThrow('LLM 请求超时');
+      await vi.advanceTimersByTimeAsync(90_000);
+      await assertion;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('用户停止时中断正在等待的 LLM 请求', async () => {
+    const controller = new AbortController();
+    const fetchMock = vi.fn((_url: string, init: RequestInit) => new Promise<Response>((_resolve, reject) => {
+      init.signal?.addEventListener('abort', () => {
+        reject(new DOMException('Aborted', 'AbortError'));
+      });
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const promise = llmProvider.classifyBatch(
+      [{ id: '1', title: 'Slow API', url: 'https://slow.example/' }],
+      [{ name: '工具', description: '工具站点' }],
+      {
+        protocol: 'openai-compatible',
+        endpoint: 'https://api.example.com/v1',
+        apiKey: 'test-key',
+        model: 'slow-model',
+      },
+      { signal: controller.signal },
+    );
+
+    controller.abort();
+
+    await expect(promise).rejects.toThrow('整理已停止');
   });
 });

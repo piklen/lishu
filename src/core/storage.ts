@@ -8,6 +8,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   llm: { protocol: 'openai-compatible', endpoint: '', apiKey: '', model: '' },
   enrichMode: 'world-knowledge',
   batchSize: 40,
+  hierarchyMode: 'auto',
+  hierarchyThreshold: 30,
 };
 
 export function normalizeConfig(config?: Partial<AppConfig>): AppConfig {
@@ -18,6 +20,11 @@ export function normalizeConfig(config?: Partial<AppConfig>): AppConfig {
     },
     enrichMode: config?.enrichMode ?? DEFAULT_CONFIG.enrichMode,
     batchSize: Math.max(1, Math.min(100, Math.floor(config?.batchSize ?? DEFAULT_CONFIG.batchSize))),
+    hierarchyMode: config?.hierarchyMode ?? DEFAULT_CONFIG.hierarchyMode,
+    hierarchyThreshold: Math.max(
+      5,
+      Math.min(50, Math.floor(config?.hierarchyThreshold ?? DEFAULT_CONFIG.hierarchyThreshold)),
+    ),
   };
 }
 

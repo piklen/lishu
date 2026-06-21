@@ -60,6 +60,22 @@ describe('buildCategoryQualityReport', () => {
     expect(report.issues.map((issue) => issue.message).join('\n')).toContain('不存在的分类');
   });
 
+  it('存在低置信度时质量分不会显示满分', () => {
+    const report = buildCategoryQualityReport(
+      progressOf({
+        total: 2,
+        categories: [{ name: '工程', description: '工程资料' }],
+        classifications: [
+          { bookmarkId: '1', category: '工程', confidence: 0.99 },
+          { bookmarkId: '2', category: '工程', confidence: 0.64 },
+        ],
+      }),
+    );
+
+    expect(report.lowConfidenceCount).toBe(1);
+    expect(report.score).toBeLessThan(100);
+  });
+
   it('标记过大、过小和空分类', () => {
     const report = buildCategoryQualityReport(
       progressOf({

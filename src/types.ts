@@ -26,24 +26,47 @@ export interface LlmConfig {
 /** 探查档位:world-knowledge=纯模型知识;meta-scrape=抓首页 meta;search-api=v2 预留 */
 export type EnrichMode = 'world-knowledge' | 'meta-scrape' | 'search-api';
 
+/** 分类写入层级:auto=分类过多时自动二级;flat=始终一级;two-level=始终二级 */
+export type HierarchyMode = 'auto' | 'flat' | 'two-level';
+
 /** 应用配置(存 chrome.storage.local) */
 export interface AppConfig {
   llm: LlmConfig;
   enrichMode: EnrichMode;
   /** 每批书签数(默认 40) */
   batchSize: number;
+  /** 分类写入层级模式 */
+  hierarchyMode: HierarchyMode;
+  /** auto 模式下超过多少类启用二级目录 */
+  hierarchyThreshold: number;
+}
+
+/** 模型探活结果;只验证 endpoint/key/model,不发送书签 */
+export interface LlmHealthCheckResult {
+  endpointOrigin: string;
+  model: string;
+  latencyMs: number;
+  checkedAt: string;
 }
 
 /** Pass A 产出的一个类目 */
 export interface Category {
   name: string;
   description: string;
+  /** 可选父级目录名;写入二级目录时会变成 parentName/name */
+  parentName?: string;
 }
 
 /** 用户在预览阶段调整的分类名 */
 export interface CategoryRename {
   from: string;
   to: string;
+}
+
+/** 用户在写入前审阅阶段手动调整的单个书签分类 */
+export interface BookmarkCategoryOverride {
+  bookmarkId: string;
+  category: string;
 }
 
 /** Pass B 单条归类结果 */
@@ -133,16 +156,39 @@ export type RunStatus =
   | 'classifying'
   | 'preview'
   | 'writing'
+  | 'stopped'
   | 'done'
   | 'error';
+
+/** 长任务观测信息,用于 popup 展示批次/耗时/最近事件 */
+export interface ProgressRunMeta {
+  startedAt?: string;
+  batchSize?: number;
+  currentBatch?: number;
+  totalBatches?: number;
+  currentBatchStartedAt?: string;
+  currentBatchAttempt?: number;
+  retryCount?: number;
+  lastBatchError?: string;
+  lastEvent?: string;
+  heartbeatAt?: string;
+  endpointOrigin?: string;
+  model?: string;
+  hierarchyMode?: HierarchyMode;
+  hierarchyThreshold?: number;
+  useTwoLevel?: boolean;
+}
 
 /** 整理进度(存 storage.local · service worker 续跑用) */
 export interface Progress {
   status: RunStatus;
   total: number;
   processed: number;
+  /** 预览审阅用的书签快照;写入时仍会重新读取当前书签树 */
+  bookmarks?: FlatBookmark[];
   categories: Category[];
   classifications: Classification[];
+  runMeta?: ProgressRunMeta;
   /** 写入后新建的文件夹 id(便于回滚/提示) */
   rootFolderId?: string;
   error?: string;
@@ -150,11 +196,13 @@ export interface Progress {
 
 /** popup <-> background 消息协议 */
 export type Message =
-  | { type: 'START' }
-  | { type: 'CONFIRM_WRITE'; categoryRenames?: CategoryRename[] }
+  | { type: 'START'; skipHealthCheck?: boolean }
+  | { type: 'CONFIRM_WRITE'; categoryRenames?: CategoryRename[]; categoryOverrides?: BookmarkCategoryOverride[] }
   | { type: 'ANALYZE_BOOKMARKS' }
   | { type: 'CHECK_DEAD_LINKS' }
+  | { type: 'CHECK_LLM'; config?: AppConfig }
   | { type: 'GET_PROGRESS' }
+  | { type: 'STOP' }
   | { type: 'RESET_PROGRESS' }
   | { type: 'DELETE_LAST_OUTPUT' }
   | { type: 'PROGRESS'; progress: Progress };

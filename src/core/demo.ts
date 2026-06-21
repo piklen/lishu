@@ -3,10 +3,30 @@ import type { Progress } from '../types';
 
 export function buildDemoProgress(): Progress {
   return {
-    status: 'preview',
-    total: 18,
-    processed: 18,
-    categories: [
+	    status: 'preview',
+	    total: 18,
+	    processed: 18,
+	    bookmarks: [
+	      { id: 'demo-1', title: 'TypeScript Handbook', url: 'https://www.typescriptlang.org/docs/', parentPath: '示例/工程' },
+	      { id: 'demo-2', title: 'Vite Guide', url: 'https://vite.dev/guide/', parentPath: '示例/工程' },
+	      { id: 'demo-3', title: 'Chrome Extension Docs', url: 'https://developer.chrome.com/docs/extensions/', parentPath: '示例/工程' },
+	      { id: 'demo-4', title: 'OpenAI API', url: 'https://platform.openai.com/docs/', parentPath: '示例/AI' },
+	      { id: 'demo-5', title: 'Anthropic Docs', url: 'https://docs.anthropic.com/', parentPath: '示例/AI' },
+	      { id: 'demo-6', title: 'DeepSeek API', url: 'https://api-docs.deepseek.com/', parentPath: '示例/AI' },
+	      { id: 'demo-7', title: 'UX Checklist', url: 'https://example.com/ux-checklist', parentPath: '示例/产品' },
+	      { id: 'demo-8', title: 'Landing Page Teardown', url: 'https://example.com/product-teardown', parentPath: '示例/产品' },
+	      { id: 'demo-9', title: 'SEC Filings', url: 'https://www.sec.gov/edgar', parentPath: '示例/金融' },
+	      { id: 'demo-10', title: 'Valuation Notes', url: 'https://example.com/valuation', parentPath: '示例/金融' },
+	      { id: 'demo-11', title: 'Longform Reading', url: 'https://example.com/reading', parentPath: '示例/阅读' },
+	      { id: 'demo-12', title: 'Knowledge Base', url: 'https://example.com/kb', parentPath: '示例/阅读' },
+	      { id: 'demo-13', title: 'Raycast', url: 'https://www.raycast.com/', parentPath: '示例/工具' },
+	      { id: 'demo-14', title: 'CleanShot', url: 'https://cleanshot.com/', parentPath: '示例/工具' },
+	      { id: 'demo-15', title: 'Release Checklist', url: 'https://example.com/release-checklist', parentPath: '示例/工具' },
+	      { id: 'demo-16', title: 'Untitled Tool', url: 'https://example.com/tool', parentPath: '示例/工具' },
+	      { id: 'demo-17', title: 'Packaging Helper', url: 'https://example.com/package', parentPath: '示例/工具' },
+	      { id: 'demo-18', title: '待分类示例', url: 'https://example.com/missing', parentPath: '示例/未分类' },
+	    ],
+	    categories: [
       { name: '工程开发', description: '编程、构建、测试和系统设计资料' },
       { name: 'AI Provider', description: '大模型 provider、API 和本地模型服务' },
       { name: '产品设计', description: '产品、隐私和用户体验资料' },

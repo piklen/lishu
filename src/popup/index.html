@@ -8,6 +8,7 @@
   <body>
     <main id="app">
       <h1>📚 理书 lishu</h1>
+      <div id="toast" class="toast" hidden></div>
 
       <section class="card">
         <h2>大模型配置</h2>
@@ -22,10 +23,12 @@
         </label>
         <label>API Key
           <input id="apiKey" type="password" placeholder="sk-..." />
+          <span id="apiKeyHint" class="field-hint">未填写 API Key</span>
         </label>
         <label>Model
           <input id="model" type="text" placeholder="gpt-4o-mini" />
         </label>
+        <div id="modelHealth" class="model-health" hidden></div>
         <label>探查方式
           <select id="enrichMode">
             <option value="world-knowledge">模型自身知识(快 · 默认)</option>
@@ -35,11 +38,25 @@
         <label>每批数量
           <input id="batchSize" type="number" min="1" max="100" step="1" value="40" />
         </label>
+        <label>分类层级
+          <select id="hierarchyMode">
+            <option value="auto">自动: 超过阈值用二级目录</option>
+            <option value="flat">始终一级目录</option>
+            <option value="two-level">始终二级目录</option>
+          </select>
+        </label>
+        <label>二级阈值
+          <input id="hierarchyThreshold" type="number" min="5" max="50" step="1" value="30" />
+        </label>
         <button id="save" class="btn-secondary">保存配置</button>
+        <div id="configStatus" class="config-status" hidden></div>
         <button id="demoPreview" class="btn-secondary demo-button">体验示例预览</button>
       </section>
 
       <section class="card">
+        <div id="modeBadge" class="mode-badge">真实模式</div>
+        <div id="progressResume" class="progress-resume" hidden></div>
+        <div id="preflight" class="preflight" hidden></div>
         <button id="start" class="btn-primary">开始整理</button>
         <button id="confirmWrite" class="btn-primary btn-confirm" disabled>确认写入副本</button>
         <div class="actions-row">
@@ -50,7 +67,7 @@
         <div class="bar"><div id="barFill" class="bar-fill"></div></div>
         <div id="preview" class="preview" hidden></div>
         <button id="copyQualityReport" class="btn-secondary quality-copy" disabled hidden>复制质量报告</button>
-        <p class="note">原书签不动。默认只授权 LLM endpoint;抓首页时才申请网页访问。</p>
+        <p class="note">原书签不动,整理副本会出现在书签栏。默认只授权 LLM endpoint;抓首页时才申请网页访问。</p>
       </section>
 
       <section class="card">
